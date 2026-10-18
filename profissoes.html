@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIDNIGHT · Profissões</title>
+  <style>
+    :root {
+      --panel: #0f1420;
+      --panel2: #111828;
+      --border: #252d42;
+      --border2: #1a2032;
+      --gold: #c9a84c;
+      --gold2: #e4c76a;
+      --text: #d4ddf0;
+      --muted: #8a94a8;
+      --muted2: #5a6480;
+      --green: #4ecb8e;
+      --amber: #f5a623;
+      --red: #e05a5a;
+      --accent: #7c6cff;
+      --cyan: #22d3ee;
+      --blue: #4f7dd6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--panel2);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand h1 {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      color: var(--gold);
+      letter-spacing: .5px;
+    }
+    .brand p { font-size: 11px; color: var(--muted); }
+    nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    nav a {
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    nav a:hover { filter: brightness(1.2); color: var(--text); }
+    nav a.active {
+      background: var(--gold);
+      color: #0b0f18;
+      border-color: var(--gold);
+    }
+    .main-wrap {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
+    }
+    #profissoes-root {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span style="font-size: 22px;">🌙</span>
+      <div>
+        <h1>MIDNIGHT</h1>
+        <p>Warband & Economy Web App</p>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html">Hub</a>
+      <a href="atividades.html">Atividades</a>
+      <a href="profissoes.html" class="active">Profissões</a>
+      <a href="metas.html">Metas</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="economia.html">Economia</a>
+    </nav>
+  </header>
+
+  <div class="main-wrap">
+    <div id="profissoes-root"></div>
+  </div>
+
+  <script>
+    // --- ADAPTADOR DO OBSIDIAN (FALSO) ---
+    const app = {
+      vault: {
+        adapter: {
+          exists: async (path) => localStorage.getItem("MDN_" + path) !== null,
+          read: async (path) => localStorage.getItem("MDN_" + path) || "{}",
+          write: async (path, data) => localStorage.setItem("MDN_" + path, data),
+          list: async (folder) => ({ files: [] }),
+          remove: async (path) => localStorage.removeItem("MDN_" + path)
+        },
+        getAbstractFileByPath: (path) => null
+      }
+    };
+    const dv = { current: () => ({ file: { folder: "" } }) };
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      dv.container = document.getElementById("profissoes-root");
+      
+      const CROOT=dv.container;
+      const _adapter=app.vault.adapter, _folder=dv.current().file.folder;
+      const _SPATH=(_folder?_folder+"/":"")+"MIDNIGHT_Profissoes_Data.json";
+      const _TABS=[["melhores", "🏆 Melhores"], ["materiais", "🧪 Materiais"], ["alquimia", "⚗️ Alquimia"], ["joalheria", "💎 Joalheria"], ["encantamento", "✨ Encant."], ["inscricao", "📜 Inscrição"], ["ferraria", "🔨 Ferraria"], ["engenharia", "⚙️ Engenharia"]];
+      const _HOOK={"melhores": "__bestFocus", "materiais": "__mzFocus", "alquimia": "__aqFocus", "joalheria": "__pf__joalheria", "encantamento": "__pf__encantamento", "inscricao": "__pf__inscricao", "ferraria": "__pf__ferraria", "engenharia": "__pf__engenharia"};
+      let _active="melhores";
+      
+      try{ if(await _adapter.exists(_SPATH)){ const p=JSON.parse(await _adapter.read(_SPATH)); if(p&&p.active)_active=p.active; } }catch(e){}
+      
+      CROOT.innerHTML=`<style>
+      .mpbar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+      .mpbar .mptab{cursor:pointer;border:1px solid var(--border);background:var(--panel2);color:var(--muted);border-radius:10px;padding:8px 14px;font-size:13.5px;font-weight:600;transition:0.15s;}
+      .mpbar .mptab:hover{filter:brightness(1.15)}
+      .mpbar .mptab.on{background:var(--gold);color:#0b0f18;border-color:var(--gold)}
+      </style>
+      <div class="mpbar" id="_mpbar"></div>
+      <div data-sec="melhores"></div><div data-sec="materiais"></div><div data-sec="alquimia"></div><div data-sec="joalheria"></div><div data-sec="encantamento"></div><div data-sec="inscricao"></div><div data-sec="ferraria"></div><div data-sec="engenharia"></div>`;
+      
+      function _apply(){ CROOT.querySelectorAll("[data-sec]").forEach(el=>{ el.style.display=(el.dataset.sec===_active)?"":"none"; }); CROOT.querySelectorAll(".mptab").forEach(b=>b.classList.toggle("on",b.dataset.t===_active)); }
+      function _redraw(){ const h=window[_HOOK[_active]]; if(typeof h==="function"){ try{ h(); }catch(e){} } }
+      
+      CROOT.querySelector("#_mpbar").innerHTML=_TABS.map(t=>'<button class="mptab" data-t="'+t[0]+'">'+t[1]+'</button>').join("");
+      CROOT.querySelectorAll(".mptab").forEach(b=>b.onclick=async()=>{ _active=b.dataset.t; await _ensure(_active); _apply(); setTimeout(_redraw,60); try{ await _adapter.write(_SPATH,JSON.stringify({active:_active})); }catch(e){} });
+
+      /* ============ MIDNIGHT · Melhores ============ */
+      async function run_melhores(root){
+        const folder=dv.current().file.folder;
+        const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const SELF_PATH=(folder?folder+"/":"")+"MIDNIGHT_Melhores_Data.json";
+        const adapter=app.vault.adapter;
+        const ALLREC={"Joalheria": {"resF": 0.45, "res": 17.0, "mc": 26.0, "data": "MIDNIGHT_Joalheria_Data.json", "items": [{"n": "Sin'dorei Lens Tier 2", "a": "Sin'dorei Lens Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Glimmering Gemdust Tier 1": 1.0, "Crystalline Glass Tier 1": 3.0}, "k": 0.0, "g": "Gema"}, {"n": "Kaleidoscopic Prism Tier 2", "a": "Kaleidoscopic Prism Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Flawless Amani Lapis Tier 1": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 10.0}, "k": 0.0, "g": "Gema"}, {"n": "Sunglass Vial Tier 2", "a": "Sunglass Vial Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Crystalline Glass Tier 1": 5.0, "Duskshrouded Stone Tier 1": 1.0}, "k": 0.0, "g": "Gema"}, {"n": "Prismatic Focusing Iris Tier 2", "a": "Prismatic Focusing Iris Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Glimmering Gemdust Tier 1": 2.0}, "k": 0.0, "g": "Gema"}, {"n": "Stabilizing Gemstone Bandolier Tier 2", "a": "Stabilizing Gemstone Bandolier Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Amani Lapis Tier 1": 1.0, "Tenebrous Amethyst Tier 1": 1.0, "Harandar Peridot Tier 1": 1.0, "Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 3.0}, "k": 0.0, "g": "Gema"}, {"n": "Indecipherable Eversong Diamond Tier 2", "a": "Indecipherable Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0, "g": "Gema"}, {"n": "Powerful Eversong Diamond Tier 2", "a": "Powerful Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0, "g": "Gema"}, {"n": "Stoic Eversong Diamond Tier 2", "a": "Stoic Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0, "g": "Gema"}, {"n": "Telluric Eversong Diamond Tier 2", "a": "Telluric Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Deadly Lapis Tier 2", "a": "Flawless Deadly Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Masterful Lapis Tier 2", "a": "Flawless Masterful Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Quick Lapis Tier 2", "a": "Flawless Quick Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Versatile Lapis Tier 2", "a": "Flawless Versatile Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Deadly Garnet Tier 2", "a": "Flawless Deadly Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Masterful Garnet Tier 2", "a": "Flawless Masterful Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Quick Garnet Tier 2", "a": "Flawless Quick Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Versatile Garnet Tier 2", "a": "Flawless Versatile Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Deadly Amethyst Tier 2", "a": "Flawless Deadly Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Masterful Amethyst Tier 2", "a": "Flawless Masterful Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Quick Amethyst Tier 2", "a": "Flawless Quick Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Versatile Amethyst Tier 2", "a": "Flawless Versatile Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Deadly Peridot Tier 2", "a": "Flawless Deadly Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Masterful Peridot Tier 2", "a": "Flawless Masterful Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Quick Peridot Tier 2", "a": "Flawless Quick Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}, {"n": "Flawless Versatile Peridot Tier 2", "a": "Flawless Versatile Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0, "g": "Gema"}]}, "Encantamento": {"resF": 0.36, "res": 25.0, "mc": 34.0, "data": "MIDNIGHT_Encantamento_Data.json", "items": [{"n": "Enchant Tool - Amani Perception Tier 2", "a": "Enchant Tool - Amani Perception Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Refulgent Copper Ingot Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Tool - Haranir Finesse Tier 2", "a": "Enchant Tool - Haranir Finesse Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Refulgent Copper Ingot Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Tool - Sin'dorei Deftness Tier 2", "a": "Enchant Tool - Sin'dorei Deftness Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 20.0, "Sterling Alloy Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Tool - Amani Resourcefulness Tier 2", "a": "Enchant Tool - Amani Resourcefulness Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Refulgent Copper Ingot Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Tool - Haranir Multicrafting Tier 2", "a": "Enchant Tool - Haranir Multicrafting Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Sterling Alloy Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Tool - Ren'dorei Ingenuity Tier 2", "a": "Enchant Tool - Ren'dorei Ingenuity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 20.0, "Gloaming Alloy Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Boots - Farstrider's Hunt Tier 2", "a": "Enchant Boots - Farstrider's Hunt Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 10.0, "Fantastic Fur": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Boots - Lynx's Dexterity Tier 2", "a": "Enchant Boots - Lynx's Dexterity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 10.0, "Carving Canine": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Boots - Shaladrassil's Roots Tier 2", "a": "Enchant Boots - Shaladrassil's Roots Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 10.0, "Azeroot Tier 1": 20.0, "Eversinging Dust Tier 1": 10.0, "Radiant Shard Tier 1": 5.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Chest - Mark of Nalorakk Tier 2", "a": "Enchant Chest - Mark of Nalorakk Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Majestic Claw": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Chest - Mark of the Magister Tier 2", "a": "Enchant Chest - Mark of the Magister Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 5.0, "Arcanoweave Bolt Tier 1": 2.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Chest - Mark of the Rootwarden Tier 2", "a": "Enchant Chest - Mark of the Rootwarden Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Majestic Fin": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Chest - Mark of the Worldsoul Tier 2", "a": "Enchant Chest - Mark of the Worldsoul Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Majestic Hide": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Ring - Eyes of the Eagle Tier 2", "a": "Enchant Ring - Eyes of the Eagle Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 15.0, "Peerless Plumage": 2.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Ring - Nature's Fury Tier 2", "a": "Enchant Ring - Nature's Fury Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Ring - Silvermoon's Alacrity Tier 2", "a": "Enchant Ring - Silvermoon's Alacrity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Ring - Silvermoon's Tenacity Tier 2", "a": "Enchant Ring - Silvermoon's Tenacity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Ring - Zul'jin's Mastery Tier 2", "a": "Enchant Ring - Zul'jin's Mastery Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Helm - Blessing of Speed Tier 2", "a": "Enchant Helm - Blessing of Speed Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Helm - Empowered Blessing of Speed Tier 2", "a": "Enchant Helm - Empowered Blessing of Speed Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Helm - Rune of Avoidance Tier 2", "a": "Enchant Helm - Rune of Avoidance Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Helm - Empowered Rune of Avoidance Tier 2", "a": "Enchant Helm - Empowered Rune of Avoidance Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Helm - Hex of Leeching Tier 2", "a": "Enchant Helm - Hex of Leeching Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Helm - Empowered Hex of Leeching Tier 2", "a": "Enchant Helm - Empowered Hex of Leeching Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Shoulders - Akil'zon's Swiftness Tier 2", "a": "Enchant Shoulders - Akil'zon's Swiftness Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Shoulders - Amirdrassil's Grace Tier 2", "a": "Enchant Shoulders - Amirdrassil's Grace Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Shoulders - Flight of the Eagle Tier 2", "a": "Enchant Shoulders - Flight of the Eagle Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Shoulders - Nature's Grace Tier 2", "a": "Enchant Shoulders - Nature's Grace Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Shoulders - Silvermoon's Mending Tier 2", "a": "Enchant Shoulders - Silvermoon's Mending Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Shoulders - Thalassian Recovery Tier 2", "a": "Enchant Shoulders - Thalassian Recovery Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Acuity of the Ren'dorei Tier 2", "a": "Enchant Weapon - Acuity of the Ren'dorei Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 5.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 3.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Arcane Mastery Tier 2", "a": "Enchant Weapon - Arcane Mastery Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 5.0, "Arcanoweave Bolt Tier 1": 2.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 15.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Berserker's Rage Tier 2", "a": "Enchant Weapon - Berserker's Rage Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Flawless Amani Lapis Tier 1": 1.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Flames of the Sin'Dorei Tier 2", "a": "Enchant Weapon - Flames of the Sin'Dorei Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 5.0, "Sunfire Silk Bolt Tier 1": 2.0, "Eversinging Dust Tier 1": 25.0, "Radiant Shard Tier 1": 15.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Jan'alai's Precision Tier 2", "a": "Enchant Weapon - Jan'alai's Precision Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Majestic Fin": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 5.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Strength of Halazzi Tier 2", "a": "Enchant Weapon - Strength of Halazzi Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Majestic Claw": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 5.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Worldsoul Aegis Tier 2", "a": "Enchant Weapon - Worldsoul Aegis Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Flawless Harandar Peridot Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Worldsoul Cradle Tier 2", "a": "Enchant Weapon - Worldsoul Cradle Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Flawless Harandar Peridot Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}, {"n": "Enchant Weapon - Worldsoul Tenacity Tier 2", "a": "Enchant Weapon - Worldsoul Tenacity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Flawless Harandar Peridot Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0, "g": "Encantamento"}]}, "Inscrição": {"resF": 0.45, "res": 17.7, "mc": 31.0, "data": "MIDNIGHT_Inscricao_Data.json", "items": [{"n": "Munsell Ink Tier 2", "a": "Munsell Ink Tier 2", "m": "A", "y": 2.0, "mb": 2.521, "r": {}, "k": 1.0785, "g": "Inscrição"}, {"n": "Sienna Ink Tier 2", "a": "Sienna Ink Tier 2", "m": "A", "y": 2.0, "mb": 2.521, "r": {}, "k": 1.0785, "g": "Inscrição"}, {"n": "Soul Cipher Tier 2", "a": "Soul Cipher Tier 2", "m": "A", "y": 1.0, "mb": 2.519, "r": {"Mote of Pure Void": 1.0, "Mote of Light": 1.0, "Duskshrouded Stone Tier 1": 1.0}, "k": 0.0, "g": "Inscrição"}, {"n": "Codified Azeroot Tier 2", "a": "Codified Azeroot Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Primal Energy": 1.0, "Mote of Wild Magic": 1.0, "Azeroot Tier 1": 8.0}, "k": 0.0, "g": "Inscrição"}, {"n": "Darkmoon Sigil: Blood Tier 2", "a": "Darkmoon Sigil: Blood Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Light": 10.0}, "k": 0.3595, "g": "Inscrição"}, {"n": "Darkmoon Sigil: Hunt Tier 2", "a": "Darkmoon Sigil: Hunt Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Wild Magic": 10.0}, "k": 0.3595, "g": "Inscrição"}, {"n": "Darkmoon Sigil: Rot Tier 2", "a": "Darkmoon Sigil: Rot Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Primal Energy": 10.0}, "k": 0.3595, "g": "Inscrição"}, {"n": "Darkmoon Sigil: Void Tier 2", "a": "Darkmoon Sigil: Void Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Pure Void": 10.0}, "k": 0.3595, "g": "Inscrição"}, {"n": "Vantus Rune: Radiant Tier 2", "a": "Vantus Rune: Radiant Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Petrified Root": 2.0}, "k": 0.5745, "g": "Inscrição"}, {"n": "Contract: The Amani Tribe Tier 2", "a": "Contract: The Amani Tribe Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Light": 3.0}, "k": 0.215, "g": "Inscrição"}, {"n": "Contract: The Silvermoon Court Tier 2", "a": "Contract: The Silvermoon Court Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Wild Magic": 3.0}, "k": 0.215, "g": "Inscrição"}, {"n": "Contract: The Hara'ti Tier 2", "a": "Contract: The Hara'ti Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Primal Energy": 3.0}, "k": 0.215, "g": "Inscrição"}, {"n": "Contract: The Singularity Tier 2", "a": "Contract: The Singularity Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Pure Void": 3.0}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Perception Tier 2", "a": "Thalassian Missive of Perception Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Multicraft Tier 2", "a": "Thalassian Missive of Multicraft Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Ingenuity Tier 2", "a": "Thalassian Missive of Ingenuity Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Resourcefulness Tier 2", "a": "Thalassian Missive of Resourcefulness Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Deftness Tier 2", "a": "Thalassian Missive of Deftness Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Crafting Speed Tier 2", "a": "Thalassian Missive of Crafting Speed Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of Finesse Tier 2", "a": "Thalassian Missive of Finesse Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of the Aurora Tier 2", "a": "Thalassian Missive of the Aurora Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of the Feverflare Tier 2", "a": "Thalassian Missive of the Feverflare Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of the Fireflash Tier 2", "a": "Thalassian Missive of the Fireflash Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of the Harmonious Tier 2", "a": "Thalassian Missive of the Harmonious Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of the Peerless Tier 2", "a": "Thalassian Missive of the Peerless Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}, {"n": "Thalassian Missive of the Quickblade Tier 2", "a": "Thalassian Missive of the Quickblade Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215, "g": "Inscrição"}]}, "Ferraria": {"resF": 0.3, "res": 20.6, "mc": 33.0, "data": "MIDNIGHT_Ferraria_Data.json", "items": [{"n": "Refulgent Copper Ingot Tier 1", "a": "Refulgent Copper Ingot Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 3.34448}, "k": 0.4013, "g": "Ferraria"}, {"n": "Refulgent Copper Ingot Tier 2", "a": "Refulgent Copper Ingot Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.4013, "g": "Ferraria"}, {"n": "Gloaming Alloy Tier 1", "a": "Gloaming Alloy Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.29657, "Umbral Tin Ore Tier 1": 4.01338}, "k": 0.9161, "g": "Ferraria"}, {"n": "Gloaming Alloy Tier 2", "a": "Gloaming Alloy Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5583, "g": "Ferraria"}, {"n": "Sterling Alloy Tier 1", "a": "Sterling Alloy Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.29657, "Brilliant Silver Ore Tier 1": 4.01338}, "k": 0.9161, "g": "Ferraria"}, {"n": "Sterling Alloy Tier 2", "a": "Sterling Alloy Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.9161, "g": "Ferraria"}, {"n": "Refulgent Razorstone Tier 1", "a": "Refulgent Razorstone Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.59348, "Duskshrouded Stone Tier 1": 0.70044, "Petrified Root": 0.35022}, "k": 1.5792, "g": "Ferraria"}, {"n": "Refulgent Razorstone Tier 2", "a": "Refulgent Razorstone Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5792, "g": "Ferraria"}, {"n": "Refulgent Weightstone Tier 1", "a": "Refulgent Weightstone Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.59348, "Duskshrouded Stone Tier 1": 0.70044, "Petrified Root": 0.35022}, "k": 1.5792, "g": "Ferraria"}, {"n": "Refulgent Weightstone Tier 2", "a": "Refulgent Weightstone Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5792, "g": "Ferraria"}, {"n": "Refulgent Whetstone Tier 1", "a": "Refulgent Whetstone Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.59348, "Duskshrouded Stone Tier 1": 0.70044, "Petrified Root": 0.35022}, "k": 1.5792, "g": "Ferraria"}, {"n": "Refulgent Whetstone Tier 2", "a": "Refulgent Whetstone Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5792, "g": "Ferraria"}, {"n": "Refulgent Repair Hammer", "a": "Refulgent Repair Hammer", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 2.09886, "Duskshrouded Stone Tier 1": 0.6689}, "k": 0.4525, "g": "Ferraria"}, {"n": "Thalassian Skeleton Key", "a": "Thalassian Skeleton Key", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 4.01338, "Brilliant Silver Ore Tier 1": 2.00669}, "k": 0.0, "g": "Ferraria"}]}, "Engenharia": {"resF": 0.45, "res": 22.3, "mc": 32.4, "data": "MIDNIGHT_Engenharia_Data.json", "items": [{"n": "Song Gear Tier 1", "a": "Song Gear Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 5.46132, "Umbral Tin Ore Tier 1": 2.73066}, "k": 0.1174, "g": "Engenharia"}, {"n": "Song Gear Tier 2", "a": "Song Gear Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 5.46132, "Umbral Tin Ore Tier 2": 2.73066}, "k": 0.1174, "g": "Engenharia"}, {"n": "Soul Sprocket Tier 1", "a": "Soul Sprocket Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 2.73066, "Umbral Tin Ore Tier 1": 5.46132}, "k": 0.1174, "g": "Engenharia"}, {"n": "Soul Sprocket Tier 2", "a": "Soul Sprocket Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 2.73066, "Umbral Tin Ore Tier 2": 5.46132}, "k": 0.1174, "g": "Engenharia"}, {"n": "Laced Zoomshots Tier 1", "a": "Laced Zoomshots Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Laced Zoomshots Tier 2", "a": "Laced Zoomshots Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Weighted Boomshots Tier 1", "a": "Weighted Boomshots Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Weighted Boomshots Tier 2", "a": "Weighted Boomshots Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Smuggler's Lynxeye Tier 1", "a": "Smuggler's Lynxeye Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Smuggler's Lynxeye Tier 2", "a": "Smuggler's Lynxeye Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Farstrider's Hawkeye Tier 1", "a": "Farstrider's Hawkeye Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Farstrider's Hawkeye Tier 2", "a": "Farstrider's Hawkeye Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348, "g": "Engenharia"}, {"n": "Consistent Cogwheel Tier 1", "a": "Consistent Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Consistent Cogwheel Tier 2", "a": "Consistent Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Flux Cogwheel Tier 1", "a": "Flux Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Flux Cogwheel Tier 2", "a": "Flux Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Greased Cogwheel Tier 1", "a": "Greased Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Greased Cogwheel Tier 2", "a": "Greased Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Perfected Cogwheel Tier 1", "a": "Perfected Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Perfected Cogwheel Tier 2", "a": "Perfected Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393, "g": "Engenharia"}, {"n": "Emergency Soul Link Tier 1", "a": "Emergency Soul Link Tier 1", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.0, "g": "Engenharia"}, {"n": "Emergency Soul Link Tier 2", "a": "Emergency Soul Link Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.0, "g": "Engenharia"}]}, "Alquimia": {"resF": 0.3, "res": 31, "mc": 34, "data": "MIDNIGHT_Alquimia_Data.json", "items": [{"n": "Silvermoon Health Potion Tier 2", "a": "Silvermoon Health Potion Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Tranquility Bloom Tier 1": 6.0}, "k": 13.75, "g": "Poção"}, {"n": "Lightfused Mana Potion Tier 2", "a": "Lightfused Mana Potion Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Tranquility Bloom Tier 1": 8.0, "Mana Lily Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Refreshing Serum Tier 2", "a": "Refreshing Serum Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Tranquility Bloom Tier 1": 8.0, "Sanguithorn Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Light's Potential Tier 2", "a": "Light's Potential Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Light": 1.0, "Tranquility Bloom Tier 1": 8.0, "Azeroot Tier 1": 3.0, "Argentleaf Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Potion of Zealotry Tier 2", "a": "Potion of Zealotry Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Light": 1.0, "Tranquility Bloom Tier 1": 8.0, "Azeroot Tier 1": 10.0}, "k": 13.75, "g": "Poção"}, {"n": "Light's Preservation Tier 2", "a": "Light's Preservation Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Light": 2.0, "Tranquility Bloom Tier 1": 4.0, "Azeroot Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Enlightenment Tonic Tier 2", "a": "Enlightenment Tonic Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Tranquility Bloom Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Draught of Rampant Abandon Tier 2", "a": "Draught of Rampant Abandon Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Primal Energy": 3.0, "Tranquility Bloom Tier 1": 8.0, "Sanguithorn Tier 1": 3.0, "Mana Lily Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Potion of Devoured Dreams Tier 2", "a": "Potion of Devoured Dreams Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Wild Magic": 2.0, "Tranquility Bloom Tier 1": 8.0, "Mana Lily Tier 1": 4.0}, "k": 13.75, "g": "Poção"}, {"n": "Potion of Recklessness Tier 2", "a": "Potion of Recklessness Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Primal Energy": 2.0, "Tranquility Bloom Tier 1": 8.0, "Azeroot Tier 1": 4.0}, "k": 13.75, "g": "Poção"}, {"n": "Amani Extract Tier 2", "a": "Amani Extract Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Tranquility Bloom Tier 1": 8.0, "Azeroot Tier 1": 3.0}, "k": 13.75, "g": "Poção"}, {"n": "Void-Shrouded Tincture Tier 2", "a": "Void-Shrouded Tincture Tier 2", "m": "A", "y": 5, "mb": 1.533, "r": {"Mote of Pure Void": 2.0, "Tranquility Bloom Tier 1": 8.0, "Sanguithorn Tier 1": 4.0}, "k": 13.75, "g": "Poção"}, {"n": "Haranir Phial of Finesse Tier 2", "a": "Haranir Phial of Finesse Tier 2", "m": "A", "y": 4, "mb": 1.5, "r": {"Mote of Primal Energy": 2.0, "Tranquility Bloom Tier 1": 8.0, "Azeroot Tier 1": 3.0, "Mana Lily Tier 1": 6.0}, "k": 11, "g": "Phial"}, {"n": "Haranir Phial of Ingenuity Tier 2", "a": "Haranir Phial of Ingenuity Tier 2", "m": "A", "y": 4, "mb": 1.5, "r": {"Mote of Pure Void": 2.0, "Tranquility Bloom Tier 1": 8.0, "Sanguithorn Tier 1": 6.0, "Mana Lily Tier 1": 3.0}, "k": 11, "g": "Phial"}, {"n": "Haranir Phial of Perception Tier 2", "a": "Haranir Phial of Perception Tier 2", "m": "A", "y": 4, "mb": 1.5, "r": {"Mote of Wild Magic": 2.0, "Tranquility Bloom Tier 1": 8.0, "Azeroot Tier 1": 6.0, "Argentleaf Tier 1": 3.0}, "k": 11, "g": "Phial"}, {"n": "Flask of the Shattered Sun Tier 2", "a": "Flask of the Shattered Sun Tier 2", "m": "A", "y": 2, "mb": 1.533, "r": {"Nocturnal Lotus": 1.0, "Mote of Primal Energy": 2.0, "Azeroot Tier 1": 8.0, "Argentleaf Tier 1": 6.0}, "k": 5.5, "g": "Flask"}, {"n": "Flask of the Blood Knights Tier 2", "a": "Flask of the Blood Knights Tier 2", "m": "A", "y": 2, "mb": 1.533, "r": {"Nocturnal Lotus": 1.0, "Mote of Wild Magic": 2.0, "Sanguithorn Tier 1": 6.0, "Argentleaf Tier 1": 8.0}, "k": 5.5, "g": "Flask"}, {"n": "Flask of the Magisters Tier 2", "a": "Flask of the Magisters Tier 2", "m": "A", "y": 2, "mb": 1.533, "r": {"Nocturnal Lotus": 1.0, "Mote of Pure Void": 2.0, "Sanguithorn Tier 1": 8.0, "Mana Lily Tier 1": 6.0}, "k": 5.5, "g": "Flask"}, {"n": "Flask of Thalassian Resistance Tier 2", "a": "Flask of Thalassian Resistance Tier 2", "m": "A", "y": 2, "mb": 1.533, "r": {"Nocturnal Lotus": 1.0, "Mote of Light": 2.0, "Azeroot Tier 1": 6.0, "Mana Lily Tier 1": 8.0}, "k": 5.5, "g": "Flask"}]}};
+        const PCOL={"Alquimia": "#4ecb8e", "Joalheria": "#22d3ee", "Encantamento": "#a330c9", "Inscrição": "#f5a623", "Ferraria": "#e05a5a", "Engenharia": "#c9a84c"};
+        const CDEF0={"Poção": 20, "Phial": 35, "Flask": 50, "Gema": 40, "Encantamento": 40, "Inscrição": 35, "Ferraria": 70, "Engenharia": 55};
+        const CGROUPS=Object.keys(CDEF0);
+        const PROFS=Object.keys(ALLREC);
+        const $=s=>root.querySelector(s);
+        function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+        function nk(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase();}
+        function fmtK(n){n=Number(n)||0;const s=n<0?"−":"";const a=Math.abs(n);let v;if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M";else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k";else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1});return s+v;}
+        function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1});}
+        function parseNum(x){const s=String(x==null?"":x).trim().replace(",",".");if(!s)return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,""));}
+
+        let MAT={};
+        async function loadMat(){MAT={};try{if(await adapter.exists(MAT_PATH)){const p=JSON.parse(await adapter.read(MAT_PATH));if(p&&p.prices)Object.keys(p.prices).forEach(k=>{MAT[k]=Number(p.prices[k].gold)||0;});}}catch(e){}}
+        function priceOf(nm){return MAT[nk(nm)]||0;}
+
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        let CONC={def:Object.assign({},CDEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CDEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CDEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CDEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+
+        let PARAMS={};
+        async function loadParams(){ PARAMS={}; for(const prof of PROFS){ const meta=ALLREC[prof]; const pth=(folder?folder+"/":"")+meta.data; let s={res:meta.res,mc:meta.mc,cut:5,ah:{}}; try{ if(await adapter.exists(pth)){ const p=JSON.parse(await adapter.read(pth)); if(typeof p.res==="number")s.res=p.res; if(typeof p.mc==="number")s.mc=p.mc; if(typeof p.cut==="number")s.cut=p.cut; if(p.ah&&typeof p.ah==="object")s.ah=p.ah; } }catch(e){} PARAMS[prof]=s; } }
+
+        function concOf(prof,it){ const key=prof+"|"+nk(it.n); if(CONC.item[key]!=null) return Number(CONC.item[key])||0; return Number(CONC.def[it.g]||0)||0; }
+        function calcItem(prof,it){
+          const meta=ALLREC[prof], P=PARAMS[prof]||{res:meta.res,mc:meta.mc,cut:5,ah:{}};
+          let miss=[],c=it.k||0;
+          for(const m in it.r){const p=priceOf(m);if(p<=0)miss.push(m);c+=it.r[m]*p;}
+          const cost=c*(1-(P.res/100)*meta.resF);
+          const ahOv=P.ah[nk(it.n)], ahImp=priceOf(it.a), ah=(ahOv!=null)?ahOv:ahImp;
+          const cut=1-P.cut/100; let value,profit;
+          if(it.m==="A"){const mult=1+(P.mc/100)*(it.mb||0);value=ah*it.y*mult*cut;profit=value-cost;}
+          else{value=cut>0?cost/cut:0;profit=ah-value;}
+          const roi=cost>0?profit/cost*100:0;
+          const nr=Object.keys(it.r).length===0;
+          const conc=concOf(prof,it); const lconc=conc>0?profit/conc:null;
+          return {prof,n:it.n,g:it.g,key:prof+"|"+nk(it.n),cost,ah,value,profit,roi,conc,lconc,miss,nr,noAh:(ah<=0)};
+        }
+        function allRows(){ const out=[]; for(const prof of PROFS){ for(const it of ALLREC[prof].items){ out.push(calcItem(prof,it)); } } return out; }
+
+        function freshState(){return {sort:"profit",prof:"all",top:20,q:""};}
+        async function loadState(){try{if(await adapter.exists(SELF_PATH)){const p=JSON.parse(await adapter.read(SELF_PATH));const s=freshState();if(["profit","roi","cost","lconc"].includes(p.sort))s.sort=p.sort;if(typeof p.prof==="string")s.prof=p.prof;if([20,50,999].includes(p.top))s.top=p.top;return s;}}catch(e){}return freshState();}
+        let saving=false,pending=false;
+        async function saveState(){if(saving){pending=true;return;}saving=true;try{await adapter.write(SELF_PATH,JSON.stringify({sort:S.sort,prof:S.prof,top:S.top}));}catch(e){}saving=false;if(pending){pending=false;saveState();}}
+        let S=await loadState();
+        await loadMat(); await loadParams(); await loadConc();
+
+        root.innerHTML=`<style>
+        .bstx{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .bstx *{box-sizing:border-box}
+        .bstx .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%;min-width:0}
+        .bstx h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .bstx .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+        .bstx .chip{cursor:pointer;border:1px solid var(--border);background:var(--panel2);color:var(--muted);border-radius:20px;padding:5px 11px;font-size:11.5px;font-weight:600}
+        .bstx .chip.on{background:var(--gold);color:#0b0f18;border-color:var(--gold)}
+        .bstx .cdefs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+        .bstx .cdi{display:flex;flex-direction:column;gap:3px;background:var(--panel);border:1px solid var(--border2);border-radius:9px;padding:7px 9px}
+        .bstx .cdi label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em}
+        .bstx .cdi input{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:5px 7px;font-size:13px;text-align:right}
+        .bstx .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .bstx .toolbar input.search{flex:1;min-width:140px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .bstx .seg{display:flex;gap:4px;flex-wrap:wrap}
+        .bstx .seg button{cursor:pointer;border:1px solid var(--border);background:var(--panel2);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:600}
+        .bstx .seg button.on{background:var(--gold);color:#0b0f18;border-color:var(--gold)}
+        .bstx .tw{width:100%;overflow-x:auto}
+        .bstx table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .bstx th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer}
+        .bstx th:nth-child(1),.bstx th:nth-child(2),.bstx td:nth-child(1),.bstx td:nth-child(2){text-align:left}
+        .bstx td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .bstx td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .bstx .rk{color:var(--muted2);width:26px}
+        .bstx .ptag{display:inline-flex;align-items:center;gap:5px;font-size:11px}
+        .bstx .pdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+        .bstx input.cc{width:46px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .bstx input.cc.ov{border-color:var(--cyan)}
+        .bstx .pos{color:var(--green)} .bstx .neg{color:var(--red)}
+        .bstx .pf{font-weight:700}
+        .bstx .lc{font-weight:700;color:var(--gold2,#e4c76a)}
+        .bstx .warn{color:var(--red);font-size:9px;margin-left:4px;cursor:help}
+        .bstx .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .bstx button.ghost{cursor:pointer;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:9px;padding:7px 11px;font-size:12px;font-weight:600}
+        </style>
+        <div class="bstx">
+          <div class="card" style="margin-bottom:14px">
+            <h2 class="mt"><span>⚗️ Concentração padrão por tipo</span><span style="font-size:11px;color:var(--muted2);font-weight:400">quantos pontos cada craft gasta — ajuste com o número da janela de criação do jogo</span></h2>
+            <div class="cdefs" id="bt-cdefs"></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>🏆 Melhores crafts agora (todas as profissões)</span><button class="ghost" id="bt-refresh">↻ atualizar preços</button></h2>
+            <div class="chips" id="bt-chips"></div>
+            <div class="toolbar">
+              <input type="text" class="search" id="bt-q" placeholder="🔎 Buscar craft…">
+              <div class="seg" id="bt-sort"><button data-s="profit">Lucro</button><button data-s="lconc">Lucro/Conc</button><button data-s="roi">ROI%</button><button data-s="cost">Custo</button></div>
+              <div class="seg" id="bt-top"><button data-t="20">Top 20</button><button data-t="50">Top 50</button><button data-t="999">Tudo</button></div>
+            </div>
+            <div class="tw"><table><thead><tr><th class="rk">#</th><th>Craft</th><th>Profissão</th><th>Custo</th><th>Venda/craft</th><th>Lucro/item</th><th>ROI%</th><th>Conc</th><th>Lucro/Conc</th></tr></thead><tbody id="bt-body"></tbody></table></div>
+            <div class="ftr" id="bt-foot"></div>
+          </div>
+        </div>`;
+
+        function renderCdefs(){
+          $("#bt-cdefs").innerHTML=CGROUPS.map(g=>'<div class="cdi"><label>'+esc(g)+'</label><input type="number" min="0" step="1" data-cg="'+esc(g)+'" value="'+(CONC.def[g]!=null?CONC.def[g]:"")+'"></div>').join("");
+          root.querySelectorAll("[data-cg]").forEach(inp=>inp.onchange=async()=>{ const g=inp.dataset.cg, v=parseNum(inp.value); CONC.def[g]=isNaN(v)?0:v; await saveConc(); render(); });
+        }
+
+        function render(){
+          $("#bt-chips").innerHTML='<span class="chip'+(S.prof==="all"?" on":"")+'" data-p="all">Todas</span>'+PROFS.map(p=>'<span class="chip'+(S.prof===p?" on":"")+'" data-p="'+esc(p)+'"><span class="pdot" style="display:inline-block;background:'+(PCOL[p]||"#888")+'"></span> '+esc(p)+'</span>').join("");
+          root.querySelectorAll("#bt-sort button").forEach(b=>b.classList.toggle("on",b.dataset.s===S.sort));
+          root.querySelectorAll("#bt-top button").forEach(b=>b.classList.toggle("on",String(b.dataset.t)===String(S.top)));
+          let rows=allRows().filter(r=>!r.noAh && !r.nr);
+          if(S.prof!=="all")rows=rows.filter(r=>r.prof===S.prof);
+          if(S.q){const t=nk(S.q);rows=rows.filter(r=>nk(r.n).includes(t));}
+          if(S.sort==="lconc")rows=rows.filter(r=>r.lconc!=null);
+          rows.sort((a,b)=>{ if(S.sort==="lconc")return (b.lconc||0)-(a.lconc||0); return (b[S.sort]||0)-(a[S.sort]||0); });
+          const total=rows.length;
+          rows=rows.slice(0,S.top);
+          const body=$("#bt-body");
+          body.innerHTML=rows.map((r,i)=>{
+            const warn=r.miss.length?'<span class="warn" title="Sem preço: '+esc(r.miss.join(", "))+'">⚠</span>':'';
+            const ov=(CONC.item[r.key]!=null);
+            return '<tr><td class="rk">'+(i+1)+'</td>'+
+              '<td class="name" title="'+esc(r.n)+' · '+esc(r.g)+'">'+esc(r.n.replace(/ Tier ([12])$/," T$1"))+warn+'</td>'+
+              '<td><span class="ptag"><span class="pdot" style="background:'+(PCOL[r.prof]||"#888")+'"></span>'+esc(r.prof)+'</span></td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+fmtK(r.value)+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+fmtK(r.profit)+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+fmtN(r.roi)+'%</td>'+
+              '<td><input class="cc'+(ov?" ov":"")+'" data-cc="'+esc(r.key)+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[r.g]||"—")+'" title="Concentração deste craft (vazio = usa o padrão do tipo '+esc(r.g)+')"></td>'+
+              '<td class="lc">'+(r.lconc!=null?fmtK(r.lconc):'<span style="color:var(--muted2)">—</span>')+'</td></tr>';
+          }).join("") || '<tr><td colspan="9" style="text-align:center;color:var(--muted2);padding:20px">Nenhum craft com preço. Importe o avg export na aba Materiais'+(S.sort==="lconc"?' e preencha a concentração por tipo acima.':'.')+'</td></tr>';
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{ const key=inp.dataset.cc, v=parseNum(inp.value); if(isNaN(v)||inp.value.trim()===""){ delete CONC.item[key]; } else { CONC.item[key]=v; } await saveConc(); render(); });
+          $("#bt-foot").textContent="Mostrando "+rows.length+" de "+total+" crafts"+(S.sort==="lconc"?" com concentração definida":"")+" · Lucro/Conc = lucro ÷ pontos de concentração · ⚠ = falta preço de material · a coluna Conc azul = valor específico do item (sobrescreve o padrão do tipo)";
+        }
+
+        renderCdefs();
+        $("#bt-chips").onclick=async e=>{const c=e.target.closest(".chip");if(!c)return;S.prof=c.dataset.p;await saveState();render();};
+        root.querySelectorAll("#bt-sort button").forEach(b=>b.onclick=async()=>{S.sort=b.dataset.s;await saveState();render();});
+        root.querySelectorAll("#bt-top button").forEach(b=>b.onclick=async()=>{S.top=Number(b.dataset.t);await saveState();render();});
+        $("#bt-q").oninput=e=>{S.q=e.target.value;render();};
+        $("#bt-refresh").onclick=async()=>{await loadMat();await loadParams();render();};
+        if(window.__bestFocus){window.removeEventListener("focus",window.__bestFocus);}
+        window.__bestFocus=async()=>{const el=$("#bt-body");if(!el||!document.body.contains(el))return;if(root.querySelector("input:focus"))return;try{await loadMat();await loadParams();await loadConc();}catch(e){}render();};
+        window.addEventListener("focus",window.__bestFocus);
+        render();
+      }
+
+      /* ============ MIDNIGHT · Materiais ============ */
+      async function run_materiais(root){
+        const folder = dv.current().file.folder;
+        const DATA_PATH = (folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const CSV_PATH  = (folder?folder+"/":"")+"MIDNIGHT_Materiais.csv";
+        const adapter = app.vault.adapter;
+
+        const CATS = [
+         ["🌿 Ervas", ["Tranquility Bloom Tier 1","Tranquility Bloom Tier 2","Azeroot Tier 1","Azeroot Tier 2","Mana Lily Tier 1","Mana Lily Tier 2","Sanguithorn Tier 1","Sanguithorn Tier 2","Argentleaf Tier 1","Argentleaf Tier 2","Nocturnal Lotus"]],
+         ["⛏️ Minérios", ["Refulgent Copper Ore Tier 1","Refulgent Copper Ore Tier 2","Umbral Tin Ore Tier 1","Umbral Tin Ore Tier 2","Brilliant Silver Ore Tier 1","Brilliant Silver Ore Tier 2","Dazzling Thorium"]],
+         ["🐾 Couros (Skinning)", ["Void-Tempered Leather Tier 1","Void-Tempered Leather Tier 2","Void-Tempered Scales Tier 1","Void-Tempered Scales Tier 2","Void-Tempered Hide Tier 1","Void-Tempered Hide Tier 2","Void-Tempered Plating Tier 1","Void-Tempered Plating Tier 2","Majestic Hide","Majestic Fin","Majestic Claw","Carving Canine","Peerless Plumage","Fantastic Fur"]],
+         ["✨ Encantamento", ["Eversinging Dust Tier 1","Eversinging Dust Tier 2","Radiant Shard Tier 1","Radiant Shard Tier 2","Dawn Crystal Tier 1","Dawn Crystal Tier 2"]],
+         ["🧵 Pano (Tailoring)", ["Bright Linen Tier 1","Bright Linen Tier 2","Arcanoweave Tier 1","Arcanoweave Tier 2","Sunfire Silk Tier 1","Sunfire Silk Tier 2"]],
+         ["💎 Gemas (Jewelcrafting)", ["Glimmering Gemdust Tier 1","Glimmering Gemdust Tier 2","Eversong Diamond Tier 1","Eversong Diamond Tier 2","Flawless Amani Lapis Tier 1","Flawless Amani Lapis Tier 2","Flawless Harandar Peridot Tier 1","Flawless Harandar Peridot Tier 2","Flawless Sanguine Garnet Tier 1","Flawless Sanguine Garnet Tier 2","Flawless Tenebrous Amethyst Tier 1","Flawless Tenebrous Amethyst Tier 2","Amani Lapis Tier 1","Amani Lapis Tier 2","Harandar Peridot Tier 1","Harandar Peridot Tier 2","Sanguine Garnet Tier 1","Sanguine Garnet Tier 2","Tenebrous Amethyst Tier 1","Tenebrous Amethyst Tier 2","Crystalline Glass Tier 1","Crystalline Glass Tier 2","Duskshrouded Stone Tier 1","Duskshrouded Stone Tier 2","Infused Heliotrope"]],
+         ["🍳 Cozinha & Pesca", ["Plant Protein","Practically Pork","Thalassian Filet","Root Crab","Bloomtail Minnow","Tender Lumifin","Fungalskin Pike","Warping Wise","Shimmersiren","Ominous Octopus","Blood Hunter","Twisted Tetra","Eversong Trout","Restored Songfish","Sin'dorei Swarmer","Lynxfish","Arcane Wyrmfish","Sunwell Fish","Shimmer Spinefish","Null Voidfish","Hollow Grouper","Gore Guppy","Lucky Loa","Sun-Seared Lumifin","Spellfire Filet","Crimson Calamari","Majestic Fin"]],
+         ["🔮 Outros reagentes", ["Mote of Pure Void","Mote of Wild Magic","Mote of Light","Mote of Primal Energy","Tormented Tantalum","Petrified Root"]]
+        ];
+
+        const $=s=>root.querySelector(s);
+        function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+        function nk(s){ return String(s||"").trim().replace(/\s+/g," ").toLowerCase(); }
+        function fmtPrice(n){ n=Number(n)||0; if(n<=0)return "—"; const a=Math.abs(n); if(a>=1e6)return (n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M"; if(a>=1e3)return (n/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k"; if(a>=100)return n.toLocaleString('pt-BR',{maximumFractionDigits:0}); return n.toLocaleString('pt-BR',{maximumFractionDigits:1}); }
+        function parseNum(v){ const s=String(v==null?"":v).trim(); if(!s)return NaN; return parseFloat(s.replace(/[^0-9.\-]/g,"")); }
+
+        const KNOWN={};
+        CATS.forEach(([cat,items])=>items.forEach(it=>{ KNOWN[nk(it)]={cat,name:it}; }));
+
+        function freshState(){ return { prices:{}, importedAt:0, copper:true, sort:"cat", showOutros:false }; }
+        async function loadState(){ try{ if(await adapter.exists(DATA_PATH)){ const p=JSON.parse(await adapter.read(DATA_PATH)); const s=freshState(); s.prices=(p.prices&&typeof p.prices==="object")?p.prices:{}; s.importedAt=p.importedAt||0; s.copper=p.copper!==false; s.sort=p.sort==="price"?"price":"cat"; s.showOutros=!!p.showOutros; return s; } }catch(e){} return freshState(); }
+        let saving=false,pending=false;
+        async function saveState(){ if(saving){pending=true;return;} saving=true; try{ await adapter.write(DATA_PATH,JSON.stringify(S)); }catch(e){} saving=false; if(pending){pending=false;saveState();} }
+        let S = await loadState();
+
+        function parseCSVLine(line){ const res=[]; let cur="",q=false; for(let i=0;i<line.length;i++){ const c=line[i]; if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; } else { if(c==='"')q=true; else if(c===','){res.push(cur);cur="";} else cur+=c; } } res.push(cur); return res; }
+        function parseAvg(text){ const out=[]; String(text||"").split(/\r?\n/).forEach(raw=>{ const line=raw.trim(); if(!line)return; const cells=parseCSVLine(line); if(cells.length<2)return; const p0=(cells[0]||"").trim(); const name=(cells[1]||"").trim(); if(!name)return; if(/^price$/i.test(p0)\vert{}\vert{}/^name$/i.test(name))return; let price=parseFloat(p0.replace(/[^0-9.\-]/g,"")); if(!isFinite(price))price=0; out.push({name,price}); }); return out; }
+
+        root.innerHTML = `<style>
+        .mzx{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .mzx *{box-sizing:border-box}
+        .mzx .grid{display:grid;gap:18px}
+        .mzx .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .mzx h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .mzx textarea{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px;font-size:12px;font-family:monospace;resize:vertical}
+        .mzx textarea:focus,.mzx input:focus,.mzx select:focus{outline:none;border-color:var(--gold)}
+        .mzx label.sl{font-size:10.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;display:block;margin:0 0 5px}
+        .mzx input[type=text],.mzx input[type=number],.mzx select{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:13px;width:100%}
+        .mzx .fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+        .mzx .chkwrap{display:flex;align-items:flex-end}
+        .mzx .chk{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer}
+        .mzx .chk input{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
+        .mzx .prev{margin-top:12px;font-size:12.5px;color:var(--muted);background:var(--panel);border:1px dashed var(--border);border-radius:9px;padding:9px 11px}
+        .mzx .ctrls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+        .mzx button{cursor:pointer;border:none;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;color:#0b0f18}
+        .mzx button:hover{filter:brightness(1.08)}
+        .mzx button.add{background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .mzx button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        .mzx button.ghost:hover{color:var(--text)}
+        .mzx .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px}
+        .mzx .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:11px;text-align:center}
+        .mzx .stat .n{font-family:Georgia,serif;font-size:20px;font-weight:bold;color:var(--gold)}
+        .mzx .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .mzx .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+        .mzx .toolbar input[type=text]{flex:1;min-width:160px}
+        .mzx .toolbar select{max-width:170px}
+        .mzx .catgrid{columns:2;column-gap:18px}
+        .mzx .sg{break-inside:avoid;margin-bottom:16px;border:1px solid var(--border2);border-radius:11px;overflow:hidden}
+        .mzx .sg h3{font-size:12px;margin:0;padding:8px 12px;background:var(--panel);color:var(--gold);display:flex;justify-content:space-between;border-bottom:1px solid var(--border2)}
+        .mzx .sg h3 span{color:var(--muted2);font-size:10.5px;font-weight:400}
+        .mzx .mrow{display:flex;justify-content:space-between;gap:10px;padding:5px 12px;font-size:12.5px;border-bottom:1px solid rgba(26,32,50,.5)}
+        .mzx .mrow:last-child{border-bottom:none}
+        .mzx .mrow .mn{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .mzx .mrow .mp{color:var(--gold2);font-variant-numeric:tabular-nums;flex:0 0 auto;font-weight:600}
+        .mzx .mrow.miss .mn{color:var(--muted2)} .mzx .mrow.miss .mp{color:var(--muted2);font-weight:400}
+        .mzx .semp{color:var(--muted2);font-size:12.5px;text-align:center;padding:22px 0}
+        .mzx .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:8px}
+        .mzx .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
+        .mzx .toast.show{opacity:1}
+        @media (max-width:620px){.mzx .stats{grid-template-columns:repeat(2,1fr)} .mzx .fgrid{grid-template-columns:repeat(2,1fr)} .mzx .catgrid{columns:1}}
+        </style>
+        <div class="mzx">
+          <div class="card">
+            <h2 class="mt"><span>📥 Importar avg export</span><span id="mz-when" style="font-size:11px;color:var(--muted2);font-weight:400"></span></h2>
+            <textarea id="mz-imp" rows="5" placeholder='Cole o texto do avg export, ex.:\\n"Price","Name","Item Level","Owned?","Available"\\n148300,"Haranir Phial of Finesse Tier 1",70,"",0'></textarea>
+            <div class="fgrid">
+              <div class="chkwrap"><label class="chk"><input type="checkbox" id="mz-copper" checked> Preço em cobre (÷10000 → ouro)</label></div>
+              <div class="chkwrap"><label class="chk"><input type="checkbox" id="mz-merge" checked> Manter antigos</label></div>
+            </div>
+            <div class="prev" id="mz-prev">Cole o texto acima.</div>
+            <div class="ctrls"><button class="add" id="mz-btn">📥 Importar e organizar</button><button class="ghost" id="mz-csv" style="display:none">⬇ CSV</button><button class="ghost" id="mz-clear">Limpar preços</button></div>
+          </div>
+          <div class="stats" style="margin-top:18px">
+            <div class="stat"><div class="n" id="mz-k1">0</div><div class="l">Materiais com preço</div></div>
+            <div class="stat"><div class="n" id="mz-k2">0</div><div class="l">Catalogados (total)</div></div>
+            <div class="stat"><div class="n" id="mz-k3">0</div><div class="l">Não classificados</div></div>
+            <div class="stat"><div class="n" id="mz-k4">—</div><div class="l">Preço médio (mat.)</div></div>
+          </div>
+          <div class="card" style="margin-top:18px">
+            <div class="toolbar">
+              <input type="text" id="mz-search" placeholder="🔎 Buscar material…">
+              <select id="mz-sort"><option value="cat">Ordem: categoria</option><option value="price">Ordem: preço (maior→menor)</option></select>
+            </div>
+            <div class="catgrid" id="mz-cats"></div>
+            <div id="mz-outros" style="margin-top:6px"></div>
+          </div>
+          <div class="ftr">Dados salvos no cache do navegador · baseado no esquema Kaychak Crafting Sheet</div>
+        </div>`;
+
+        let toastT=null;
+        function toast(m){ let t=$(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; root.querySelector(".mzx").appendChild(t);} t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+
+        function priceOf(key){ const e=S.prices[key]; return e?Number(e.gold)||0:0; }
+
+        function updatePrev(){ const el=$("#mz-prev"); if(!el)return; const p=parseAvg($("#mz-imp").value); if(!p.length){ el.innerHTML='Cole o texto acima — reconhece o formato <b>Price,"Name",…</b>.'; return; } let known=0; p.forEach(x=>{ if(KNOWN[nk(x.name)])known++; }); const toG=$("#mz-copper").checked; const ex=p.slice(0,2).map(x=>esc(x.name)+" ("+fmtPrice(toG?x.price/10000:x.price)+")").join(" · "); el.innerHTML='<b>'+p.length+'</b> linha(s) · <b style="color:var(--green)">'+known+'</b> são materiais catalogados. Ex.: '+ex+(p.length>2?" …":""); }
+
+        async function doImport(){
+          const parsed=parseAvg($("#mz-imp").value); if(!parsed.length){ toast("Nada reconhecido"); return; }
+          const toG=$("#mz-copper").checked;
+          if(!$("#mz-merge").checked) S.prices={};
+          parsed.forEach(p=>{ const key=nk(p.name); const gold=toG?p.price/10000:p.price; const kn=KNOWN[key]; S.prices[key]={name:kn?kn.name:p.name, gold:gold}; });
+          S.importedAt=Date.now(); S.copper=toG;
+          await saveState(); $("#mz-imp").value=""; updatePrev(); render(); toast(parsed.length+" preços importados");
+        }
+
+        function render(){
+          const term=nk($("#mz-search")?$("#mz-search").value:"");
+          const sortBy=S.sort;
+          let known=0; Object.keys(KNOWN).forEach(k=>{ if(priceOf(k)>0)known++; });
+          const totalCat=Object.keys(KNOWN).length;
+          const outrosKeys=Object.keys(S.prices).filter(k=>!KNOWN[k]);
+          const pricedVals=Object.keys(KNOWN).map(priceOf).filter(v=>v>0);
+          const avg=pricedVals.length?pricedVals.reduce((a,b)=>a+b,0)/pricedVals.length:0;
+          $("#mz-k1").textContent=known; $("#mz-k2").textContent=totalCat; $("#mz-k3").textContent=outrosKeys.length; $("#mz-k4").textContent=avg?fmtPrice(avg):"—";
+          $("#mz-when").textContent = S.importedAt?("atualizado em "+new Date(S.importedAt).toLocaleString('pt-BR')):"sem importação ainda";
+          
+          const box=$("#mz-cats"); let html="";
+          CATS.forEach(([cat,items])=>{
+            let rows=items.map(it=>({name:it,key:nk(it),gold:priceOf(nk(it))}));
+            if(term) rows=rows.filter(r=>r.key.includes(term));
+            if(!rows.length)return;
+            if(sortBy==="price") rows.sort((a,b)=>b.gold-a.gold);
+            const nPriced=rows.filter(r=>r.gold>0).length;
+            html+='<div class="sg"><h3>'+esc(cat)+' <span>'+nPriced+'/'+rows.length+'</span></h3>'+
+              rows.map(r=>'<div class="mrow'+(r.gold>0?'':' miss')+'"><span class="mn" title="'+esc(r.name)+'">'+esc(r.name)+'</span><span class="mp">'+fmtPrice(r.gold)+'</span></div>').join("")+'</div>';
+          });
+          box.innerHTML=html||'<div class="semp">Nenhum material encontrado'+(term?" para a busca.":". Importe um avg export acima.")+'</div>';
+          
+          const ob=$("#mz-outros");
+          let outros=outrosKeys.map(k=>({name:S.prices[k].name,key:k,gold:priceOf(k)}));
+          if(term) outros=outros.filter(r=>r.key.includes(term));
+          outros.sort((a,b)=>b.gold-a.gold);
+          if(outros.length){
+            ob.innerHTML='<div class="sg" style="margin-top:4px"><h3 style="cursor:pointer" id="mz-outros-h">📦 Não classificados (crafts/produtos) <span>'+outros.length+' · '+(S.showOutros?"ocultar":"mostrar")+'</span></h3>'+
+              (S.showOutros? outros.map(r=>'<div class="mrow"><span class="mn" title="'+esc(r.name)+'">'+esc(r.name)+'</span><span class="mp">'+fmtPrice(r.gold)+'</span></div>').join("") : '')+'</div>';
+            const h=$("#mz-outros-h"); if(h) h.onclick=async()=>{ S.showOutros=!S.showOutros; await saveState(); render(); };
+          } else ob.innerHTML="";
+        }
+
+        $("#mz-btn").onclick=doImport;
+        $("#mz-imp").oninput=updatePrev;
+        $("#mz-copper").onchange=updatePrev;
+        $("#mz-clear").onclick=async()=>{ if(!Object.keys(S.prices).length)return; if(confirm("Apagar todos os preços importados?")){ S.prices={}; S.importedAt=0; await saveState(); render(); toast("Preços apagados"); } };
+        $("#mz-search").oninput=render;
+        $("#mz-sort").onchange=async e=>{ S.sort=e.target.value==="price"?"price":"cat"; await saveState(); render(); };
+
+        if(window.__mzFocus){ window.removeEventListener("focus",window.__mzFocus); }
+        window.__mzFocus=async()=>{ const el=$("#mz-cats"); if(!el||!document.body.contains(el))return; try{ S=await loadState(); }catch(e){} if($("#mz-sort"))$("#mz-sort").value=S.sort; render(); };
+        window.addEventListener("focus",window.__mzFocus);
+
+        if($("#mz-sort"))$("#mz-sort").value=S.sort;
+        render(); updatePrev();
+      }
+
+      const RUN={melhores:run_melhores,materiais:run_materiais,alquimia:run_alquimia,joalheria:run_joalheria,encantamento:run_encantamento,inscricao:run_inscricao,ferraria:run_ferraria,engenharia:run_engenharia};
+      const _ran={};
+      async function _ensure(k){ if(_ran[k])return; _ran[k]=true; const el=CROOT.querySelector('[data-sec="'+k+'"]'); try{ await RUN[k](el); }catch(e){ _ran[k]=false; console.log('painel '+k+' erro',e); } }
+
+      await _ensure(_active);
+      _apply();
+      setTimeout(_redraw,300);
+
+    });
+  </script>
+</body>
+</html>
