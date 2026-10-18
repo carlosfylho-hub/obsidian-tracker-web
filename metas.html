@@ -188,10 +188,10 @@
       let EXT={records:[]};
       async function loadExternal(){
         const rec=[], rd=async f=>{ try{ const p=(folder?folder+"/":"")+f; if(await adapter.exists(p)) return JSON.parse(await adapter.read(p)); }catch(e){} return null; };
-        const lvl=await rd("MIDNIGHT_Leveling_Data.json"); if(lvl&&Array.isArray(lvl.sessions)) lvl.sessions.forEach(s=>{ if(s&&s.endedAt){ const d=new Date(s.endedAt); rec.push({date:d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()),ms:s.durationMs||0,src:"lvl"}); } });
-        const log=await rd("MIDNIGHT_Log_Data.json"); if(log&&Array.isArray(log.entries)) log.entries.forEach(e=>{ if(e&&e.date) rec.push({date:e.date,ms:e.durationMs||0,chars:e.chars||0,src:"log"}); });
-        const main=await rd("MIDNIGHT_Main_Data.json"); if(main&&Array.isArray(main.entries)) main.entries.forEach(e=>{ if(e&&e.date) rec.push({date:e.date,ms:e.durationMs||0,src:"main"}); });
-        const pesca=await rd("MIDNIGHT_Pesca_Data.json"); if(pesca&&Array.isArray(pesca.sessions)) pesca.sessions.forEach(s=>{ if(s&&s.date) rec.push({date:s.date,ms:s.durationMs||0,src:"pesca"}); });
+        const lvl=await rd("MDN_MIDNIGHT_Leveling_Data.json"); if(lvl&&Array.isArray(lvl.sessions)) lvl.sessions.forEach(s=>{ if(s&&s.endedAt){ const d=new Date(s.endedAt); rec.push({date:d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()),ms:s.durationMs||0,src:"lvl"}); } });
+        const log=await rd("MDN_MIDNIGHT_Log_Data.json"); if(log&&Array.isArray(log.entries)) log.entries.forEach(e=>{ if(e&&e.date) rec.push({date:e.date,ms:e.durationMs||0,chars:e.chars||0,src:"log"}); });
+        const main=await rd("MDN_MIDNIGHT_Main_Data.json"); if(main&&Array.isArray(main.entries)) main.entries.forEach(e=>{ if(e&&e.date) rec.push({date:e.date,ms:e.durationMs||0,src:"main"}); });
+        const pesca=await rd("MDN_MIDNIGHT_Pesca_Data.json"); if(pesca&&Array.isArray(pesca.sessions)) pesca.sessions.forEach(s=>{ if(s&&s.date) rec.push({date:s.date,ms:s.durationMs||0,src:"pesca"}); });
         EXT.records=rec;
       }
       
