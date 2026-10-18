@@ -114,7 +114,7 @@
   </div>
 
   <script>
-    // --- ADAPTADOR DO OBSIDIAN (FALSO) ---
+    // --- ADAPTADOR DO LOCALSTORAGE ---
     const app = {
       vault: {
         adapter: {
@@ -259,10 +259,6 @@
       .mtx .sec{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 8px}
       .mtx .semp{color:var(--muted2);font-size:12.5px;text-align:center;padding:18px 0}
       .mtx .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:8px}
-      .mtx .lnk{color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;font-size:11px;padding:0;font-weight:400}
-      .mtx .lnk:hover{color:var(--red)}
-      .mtx .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
-      .mtx .toast.show{opacity:1}
       .mtx .tcard{container-type:inline-size}
       .mtx .tdisp{font-family:Georgia,serif;font-weight:bold;text-align:center;letter-spacing:1px;line-height:1;padding:6px 0;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:clamp(26px,13cqw,46px)}
       .mtx .tdisp.run{color:var(--gold2);text-shadow:0 0 22px rgba(228,199,106,.25)}
@@ -360,7 +356,7 @@
       </div>`;
 
       let toastT=null;
-      function toast(m){ let t=$(".toast"); if(!t){t=document.createElement("div");t.className="toast";root.querySelector(".mtx").appendChild(t);} t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400); }
+      function toast(m){ let t=document.querySelector(".toast"); if(!t){t=document.createElement("div");t.className="toast";root.querySelector(".mtx").appendChild(t);} t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
 
       async function addGoal(){
         const title=($("#n-title").value||"").trim(); if(!title){toast("Dê um nome à meta");return;}
