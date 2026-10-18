@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -237,7 +237,6 @@
 </head>
 <body>
 
-  <!-- Menu de Navegação Global -->
   <header>
     <div class="brand">
       <span style="font-size: 22px;">🌙</span>
@@ -416,7 +415,7 @@
       return n.toLocaleString('pt-BR');
     }
 
-    // Leitura do LocalStorage
+    // Leitura do LocalStorage (Substitui as chamadas Obsidian)
     let RECORDS = [], METAS = [], LVL_CHARS = [], LVL_GOALS = [];
     let CFG = { budgetHours: 0 };
 
@@ -429,28 +428,28 @@
 
     function loadRecords() {
       RECORDS = [];
-      const lvl = readLocalJson("MIDNIGHT_Leveling_Data.json");
+      const lvl = readLocalJson("MDN_MIDNIGHT_Leveling_Data.json");
       if (lvl) {
         if (Array.isArray(lvl.sessions)) lvl.sessions.forEach(s => { if(s && s.endedAt) RECORDS.push({date:dateStr(new Date(s.endedAt)), ms:s.durationMs||0, src:"lvl"}); });
         LVL_CHARS = Array.isArray(lvl.chars) ? lvl.chars : [];
         LVL_GOALS = Array.isArray(lvl.customGoals) ? lvl.customGoals : [];
       }
-      const log = readLocalJson("MIDNIGHT_Log_Data.json");
+      const log = readLocalJson("MDN_MIDNIGHT_Log_Data.json");
       if (log && Array.isArray(log.entries)) {
         log.entries.forEach(e => { if(e && e.date) RECORDS.push({date:e.date, ms:e.durationMs||0, chars:e.chars||0, src:"log"}); });
       }
-      const main = readLocalJson("MIDNIGHT_Main_Data.json");
+      const main = readLocalJson("MDN_MIDNIGHT_Main_Data.json");
       if (main && Array.isArray(main.entries)) {
         main.entries.forEach(e => { if(e && e.date) RECORDS.push({date:e.date, ms:e.durationMs||0, src:"main"}); });
       }
-      const pesca = readLocalJson("MIDNIGHT_Pesca_Data.json");
+      const pesca = readLocalJson("MDN_MIDNIGHT_Pesca_Data.json");
       if (pesca && Array.isArray(pesca.sessions)) {
         pesca.sessions.forEach(s => { if(s && s.date) RECORDS.push({date:s.date, ms:s.durationMs||0, src:"pesca"}); });
       }
-      const metas = readLocalJson("MIDNIGHT_Metas_Data.json");
+      const metas = readLocalJson("MDN_MIDNIGHT_Metas_Data.json");
       METAS = (metas && Array.isArray(metas.goals)) ? metas.goals : [];
 
-      const cfgSaved = readLocalJson("MIDNIGHT_Hub_Config.json");
+      const cfgSaved = readLocalJson("MDN_MIDNIGHT_Hub_Config.json");
       if (cfgSaved) CFG = Object.assign(CFG, cfgSaved);
     }
 
@@ -680,6 +679,16 @@
       box.innerHTML = h;
     }
 
+    function lvlActiveGoal(){ const now=new Date(); now.setHours(12,0,0,0); let best=null,br=-1; (LVL_GOALS||[]).forEach(g=>{ const from=g.from?parseDate(g.from):new Date(0); from.setHours(0,0,0,0); const until=g.until?parseDate(g.until):new Date(8640000000000000); if(now>=from&&now<=until){ const wr=(g.unit==="week")?(Number(g.rate)||0):(Number(g.rate)||0)*7; if(wr>br){br=wr;best=g;} } }); return best; }
+    function qualDays(){ const s=new Set(); RECORDS.forEach(r=>{ if(r.src==="lvl"&&r.ms>0)s.add(r.date); if(r.src==="log"&&(r.chars||0)>0)s.add(r.date); }); (LVL_CHARS||[]).forEach(c=>{ if(c.done&&c.doneAt)s.add(dateStr(new Date(c.doneAt))); }); return s; }
+    function dailyStreakCalc(){ const q=qualDays(); if(!q.size)return {cur:0,best:0};
+      const today=new Date(); today.setHours(12,0,0,0);
+      let startD=new Date(today); if(!q.has(dateStr(startD)))startD=addDays(startD,-1);
+      let cur=0,d=new Date(startD),g=0; while(q.has(dateStr(d))&&g<2000){ cur++; d=addDays(d,-1); g++; }
+      const arr=[...q].sort(); let best=0,run=0,prev=null; arr.forEach(ds=>{ const dt=parseDate(ds); if(prev&&Math.round((dt-prev)/86400000)===1)run++; else run=1; if(run>best)best=run; prev=dt; });
+      return {cur,best:Math.max(best,cur)}; 
+    }
+
     function renderResumo() {
       const gx = $("#rz-grid"); if(!gx) return;
       const now = new Date(), today = dateStr(now);
@@ -694,6 +703,7 @@
       const weekUps = (LVL_CHARS||[]).filter(c => c.done && c.doneAt && cycleKey(new Date(c.doneAt)) === cs).length;
       const budgetMs = (CFG.budgetHours||0) * 3600000, usedMs = RECORDS.filter(r => cycleKey(parseDate(r.date)) === cs).reduce((a,r) => a + r.ms, 0);
       const voltas = cycleChars / 70;
+      const ag=lvlActiveGoal(), ds=dailyStreakCalc();
 
       const items = [
         ['⏱️', 'Tempo hoje', todayMs ? fmtHuman(todayMs) : '<span style="color:var(--muted2)">nada ainda</span>'],
@@ -701,6 +711,8 @@
         ['🔁', 'Log no ciclo', cycleChars + '/70' + (cycleChars >= 70 ? ' ✓' : '') + (voltas > 1 ? (' · ' + (Math.round(voltas*10)/10).toLocaleString('pt-BR') + '×') : '')],
         ['⚔️', 'Leveling', leftL > 0 ? ('faltam ' + leftL + ' · ' + weekUps + ' na semana') : '🎉 70/70']
       ];
+      if(ag) items.push(['🔥','Meta ativa', esc(ag.name)+' · '+(ag.unit==="day"?(Number(ag.rate)+'/dia'):(Number(ag.rate)+'/sem'))+(ag.until?(' até '+dmy(parseDate(ag.until))):'')]);
+      items.push(['📆','Ofensiva diária', ds.cur>0?('<b style="color:var(--gold)">'+ds.cur+'</b> dia'+(ds.cur>1?'s':'')+' seguidos · recorde '+ds.best):'<span style="color:var(--muted2)">sem sequência — jogue hoje</span>']);
       if (budgetMs) {
         const rem = budgetMs - usedMs;
         items.push(['⏳', 'Orçamento', rem >= 0 ? ('restam ' + fmtHuman(rem)) : ('<span style="color:var(--red)">' + fmtHuman(-rem) + ' acima</span>')]);
@@ -729,7 +741,7 @@
     $("#m-refresh").onclick = renderAll;
     $("#b-input").onchange = e => {
       CFG.budgetHours = Math.max(0, parseInt(e.target.value, 10) || 0);
-      localStorage.setItem("MIDNIGHT_Hub_Config.json", JSON.stringify(CFG));
+      localStorage.setItem("MDN_MIDNIGHT_Hub_Config.json", JSON.stringify(CFG));
       renderBudget();
     };
     window.addEventListener("resize", () => { if($("#hub-chart")) renderChart(); });
