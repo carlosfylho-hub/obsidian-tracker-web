@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIDNIGHT · Hub</title>
+  <style>
+    :root {
+      --panel: #0f1420;
+      --panel2: #111828;
+      --border: #252d42;
+      --border2: #1a2032;
+      --gold: #c9a84c;
+      --gold2: #e4c76a;
+      --text: #d4ddf0;
+      --muted: #8a94a8;
+      --muted2: #5a6480;
+      --green: #4ecb8e;
+      --amber: #f5a623;
+      --red: #e05a5a;
+      --accent: #7c6cff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--panel2);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand h1 {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      color: var(--gold);
+      letter-spacing: .5px;
+    }
+    .brand p { font-size: 11px; color: var(--muted); }
+    nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    nav a {
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    nav a:hover { filter: brightness(1.2); color: var(--text); }
+    nav a.active {
+      background: var(--gold);
+      color: #0b0f18;
+      border-color: var(--gold);
+    }
+    .main-wrap {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
+    }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      max-width: 100%;
+      min-width: 0;
+    }
+    h2.mt {
+      font-family: Georgia, serif;
+      font-size: 15px;
+      margin: 0 0 14px;
+      color: var(--gold);
+      letter-spacing: .3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    #resumo {
+      background: linear-gradient(180deg, #121a2b, #0f1420);
+      border: 1px solid var(--gold);
+    }
+    .rzgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 11px;
+    }
+    .rzi {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .rzi .rzic { font-size: 19px; flex: 0 0 auto; }
+    .rzi .rzl { font-size: 10px; color: var(--muted2); text-transform: uppercase; letter-spacing: .05em; }
+    .rzi .rzv { font-size: 13.5px; color: var(--text); font-weight: 600; margin-top: 2px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 11px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat .n { font-family: Georgia, serif; font-size: 23px; font-weight: bold; color: var(--gold); }
+    .stat .l { font-size: 10px; color: var(--muted2); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+    #hub-streak {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 14px;
+    }
+    .gbig { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+    .gbig .num2 { font-family: Georgia, serif; font-size: 28px; font-weight: bold; color: var(--gold); }
+    .gbig .of { color: var(--muted); font-size: 13.5px; }
+    input[type=number] {
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 4px 8px;
+      font-size: 13px;
+    }
+    .prog {
+      height: 11px;
+      background: var(--panel2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 7px 0;
+    }
+    .prog > i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), #6fe0a8);
+      transition: width .4s;
+    }
+    .gmeta { font-size: 12px; color: var(--muted); margin-top: 7px; }
+    .gmeta b { color: var(--text); }
+    .pill { display: inline-block; font-size: 10.5px; padding: 2px 8px; border-radius: 20px; font-weight: 600; margin-left: 5px; }
+    .pill.ok { background: rgba(78, 203, 142, .15); color: var(--green); border: 1px solid rgba(78, 203, 142, .3); }
+    .pill.over { background: rgba(224, 90, 90, .15); color: #e05a5a; border: 1px solid rgba(224, 90, 90, .35); }
+    .pill.atual { background: rgba(124, 108, 255, .15); color: #9d92ff; border: 1px solid rgba(124, 108, 255, .4); }
+    .ctrls { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      cursor: pointer;
+      border-radius: 9px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--muted);
+      transition: 0.15s;
+    }
+    button:hover { filter: brightness(1.15); }
+    button.active { background: var(--gold); color: #0b0f18; border-color: var(--gold); }
+    button.refresh { background: linear-gradient(180deg, var(--green), #3bb47c); color: #0b0f18; border: none; }
+    .catbars { display: flex; flex-direction: column; gap: 10px; }
+    .catrow { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+    .catrow .cdot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+    .catrow .cname { width: 90px; flex: 0 0 auto; }
+    .catrow .cbar { flex: 1; height: 11px; background: var(--panel2); border-radius: 6px; overflow: hidden; }
+    .catrow .cbar > i { display: block; height: 100%; }
+    .catrow .cval { width: 88px; text-align: right; flex: 0 0 auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .cw { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; }
+    canvas { display: block; }
+    .leg { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+    .leg span { display: inline-flex; align-items: center; gap: 6px; }
+    .leg i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .hm-wrap { display: flex; gap: 6px; min-width: max-content; }
+    .hm-days { display: flex; flex-direction: column; gap: 3px; font-size: 9px; color: var(--muted2); padding-top: 15px; }
+    .hm-days span { height: 12px; line-height: 12px; }
+    .hm-months { display: flex; gap: 3px; height: 12px; margin-bottom: 3px; font-size: 9px; color: var(--muted2); }
+    .hm-months span { width: 12px; display: inline-block; white-space: nowrap; overflow: visible; }
+    .hm { display: flex; gap: 3px; }
+    .hm .wk { display: flex; flex-direction: column; gap: 3px; }
+    .hm .cell { width: 12px; height: 12px; border-radius: 3px; }
+    .hmleg { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: var(--muted); margin-top: 10px; justify-content: flex-end; }
+    .hmleg i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .fecho .fh { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: flex-end; }
+    .fecho .big { font-family: Georgia, serif; font-size: 27px; color: var(--gold); font-weight: bold; line-height: 1.1; }
+    .fecho .fg { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+    .fecho .fi { background: var(--panel); border: 1px solid var(--border2); border-radius: 9px; padding: 9px 11px; }
+    .fecho .fi .fl { font-size: 10px; color: var(--muted2); text-transform: uppercase; letter-spacing: .05em; }
+    .fecho .fi .fv { font-size: 15px; color: var(--text); font-weight: 600; margin-top: 2px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; color: var(--muted2); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; padding: 5px 9px; border-bottom: 1px solid var(--border); }
+    td { padding: 7px 9px; border-bottom: 1px solid var(--border2); }
+    tr.cur td { background: rgba(124, 108, 255, .07); }
+    .sscroll { max-height: 300px; overflow-y: auto; overflow-x: auto; max-width: 100%; }
+    .sscroll table { min-width: 520px; }
+    .semp { color: var(--muted2); font-size: 12.5px; text-align: center; padding: 18px 0; }
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Menu de Navegação Global -->
+  <header>
+    <div class="brand">
+      <span style="font-size: 22px;">🌙</span>
+      <div>
+        <h1>MIDNIGHT</h1>
+        <p>Hub Geral de Monitoramento</p>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html" class="active">Hub</a>
+      <a href="atividades.html">Atividades</a>
+      <a href="profissoes.html">Profissões</a>
+      <a href="metas.html">Metas</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="economia.html">Economia</a>
+    </nav>
+  </header>
+
+  <div class="main-wrap">
+    <!-- Card: Resumo do Dia -->
+    <div class="card" id="resumo" style="margin-bottom:20px">
+      <h2 class="mt">
+        <span>☀️ Resumo do dia</span>
+        <span id="rz-date" style="font-size:11px;color:var(--muted2);font-weight:400"></span>
+      </h2>
+      <div class="rzgrid" id="rz-grid"></div>
+    </div>
+
+    <!-- Cards de Stats -->
+    <div class="stats">
+      <div class="stat"><div class="n" id="s-total">0h</div><div class="l">Tempo total</div></div>
+      <div class="stat"><div class="n" id="s-month">0h</div><div class="l">Este mês</div></div>
+      <div class="stat"><div class="n" id="s-cycle">0h</div><div class="l">Este ciclo</div></div>
+      <div class="stat"><div class="n" id="s-week7">0h</div><div class="l">Últimos 7 dias</div></div>
+    </div>
+
+    <!-- Ofensiva de Log -->
+    <div id="hub-streak"></div>
+
+    <div class="grid" style="margin-top:20px">
+      <!-- Orçamento -->
+      <div class="card">
+        <h2 class="mt">⏳ Orçamento de jogo (ciclo atual)</h2>
+        <div class="gbig">
+          <span class="num2" id="b-used">0h</span>
+          <span class="of">de <input type="number" id="b-input" min="0" step="1" value="0" style="width:64px"> h por ciclo <span id="b-pill"></span></span>
+        </div>
+        <div class="prog"><i id="b-bar" style="width:0%"></i></div>
+        <div class="gmeta" id="b-meta"></div>
+      </div>
+
+      <!-- Tempo por Atividade -->
+      <div class="card">
+        <h2 class="mt">
+          <span>🧭 Tempo por atividade</span>
+          <span class="ctrls">
+            <button id="m-all" class="active">Tudo</button>
+            <button id="m-month">Mês</button>
+            <button id="m-cycle">Ciclo</button>
+            <button class="refresh" id="m-refresh">↻ Atualizar</button>
+          </span>
+        </h2>
+        <div class="catbars" id="dist"></div>
+      </div>
+
+      <!-- Gráfico 28 Dias -->
+      <div class="card">
+        <h2 class="mt">📈 Tempo total por dia (28 dias)</h2>
+        <div class="cw"><canvas id="hub-chart" height="240"></canvas></div>
+        <div class="leg">
+          <span><i style="background:#4ecb8e"></i> Leveling</span>
+          <span><i style="background:#c9a84c"></i> Log diário</span>
+          <span><i style="background:#A330C9"></i> Main</span>
+          <span><i style="background:#4f7dd6"></i> Pesca</span>
+        </div>
+      </div>
+
+      <!-- Heatmap Anual -->
+      <div class="card">
+        <h2 class="mt">🟩 Heatmap anual (tempo de jogo por dia)</h2>
+        <div class="cw">
+          <div class="hm-wrap">
+            <div class="hm-days" id="hm-days"></div>
+            <div>
+              <div class="hm-months" id="hm-months"></div>
+              <div class="hm" id="hm-grid"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hmleg">
+          menos 
+          <i style="background:#161d2e"></i>
+          <i style="background:#0e4429"></i>
+          <i style="background:#166534"></i>
+          <i style="background:#22a355"></i>
+          <i style="background:#4ade80"></i> 
+          mais
+        </div>
+      </div>
+
+      <!-- Fecho do Último Ciclo -->
+      <div class="card fecho">
+        <h2 class="mt">📖 Fecho do último ciclo</h2>
+        <div id="fecho-box"></div>
+      </div>
+
+      <!-- Tabela por Ciclo -->
+      <div class="card">
+        <h2 class="mt">📊 Por ciclo (ter→seg)</h2>
+        <div class="sscroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Ciclo</th>
+                <th style="text-align:right">Leveling</th>
+                <th style="text-align:right">Log</th>
+                <th style="text-align:right">Main</th>
+                <th style="text-align:right">Pesca</th>
+                <th style="text-align:right">Voltas</th>
+                <th style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="cyc-body"></tbody>
+          </table>
+          <div class="semp" id="cyc-empty" style="display:none">Sem dados ainda.</div>
+        </div>
+      </div>
+
+      <!-- Metas -->
+      <div class="card">
+        <h2 class="mt">
+          <span>🎯 Metas</span>
+          <span style="font-size:11px;color:var(--muted2);font-weight:400">· <a href="metas.html" style="color:var(--muted);text-decoration:underline">abrir página de metas</a></span>
+        </h2>
+        <div id="metas-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configurações e constantes
+    const RESET_DOW = 2, RESET_HOUR = 12;
+    const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const SRC = [
+      {key:"lvl",label:"Leveling",color:"#4ecb8e",file:"MIDNIGHT_Leveling_Data.json"},
+      {key:"log",label:"Log diário",color:"#c9a84c",file:"MIDNIGHT_Log_Data.json"},
+      {key:"main",label:"Main",color:"#A330C9",file:"MIDNIGHT_Main_Data.json"},
+      {key:"pesca",label:"Pesca",color:"#4f7dd6",file:"MIDNIGHT_Pesca_Data.json"}
+    ];
+
+    const $ = s => document.querySelector(s);
+    const pad = n => String(n).padStart(2, "0");
+    function fmtHuman(ms) {
+      const t = Math.floor(ms/60000), h = Math.floor(t/60), m = t%60;
+      return h > 0 ? h + "h" + (m ? " " + pad(m) : "") : m + "min";
+    }
+    function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+    function dm(d) { return pad(d.getDate()) + "/" + pad(d.getMonth() + 1); }
+    function dmy(d) { return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); }
+    function dateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+    function parseDate(s) { const p = (s||"").split("-").map(n => parseInt(n, 10)); return new Date(p[0], (p[1]||1)-1, p[2]||1, 12, 0, 0); }
+    function cycleStart(d) {
+      const t = new Date(d);
+      t.setHours(RESET_HOUR, 0, 0, 0);
+      const diff = ((t.getDay() - RESET_DOW) + 7) % 7;
+      t.setDate(t.getDate() - diff);
+      if (t > d) t.setDate(t.getDate() - 7);
+      return t;
+    }
+    function cycleKey(d) { return cycleStart(d).getTime(); }
+    function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+    function fmtGold(n) {
+      n = n || 0; const a = Math.abs(n);
+      if (a >= 1e6) return (n/1e6).toLocaleString('pt-BR', {maximumFractionDigits:2}) + "M";
+      if (a >= 1e3) return (n/1e3).toLocaleString('pt-BR', {maximumFractionDigits:1}) + "k";
+      return n.toLocaleString('pt-BR');
+    }
+
+    // Leitura do LocalStorage
+    let RECORDS = [], METAS = [], LVL_CHARS = [], LVL_GOALS = [];
+    let CFG = { budgetHours: 0 };
+
+    function readLocalJson(key) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+      } catch(e) { return null; }
+    }
+
+    function loadRecords() {
+      RECORDS = [];
+      const lvl = readLocalJson("MIDNIGHT_Leveling_Data.json");
+      if (lvl) {
+        if (Array.isArray(lvl.sessions)) lvl.sessions.forEach(s => { if(s && s.endedAt) RECORDS.push({date:dateStr(new Date(s.endedAt)), ms:s.durationMs||0, src:"lvl"}); });
+        LVL_CHARS = Array.isArray(lvl.chars) ? lvl.chars : [];
+        LVL_GOALS = Array.isArray(lvl.customGoals) ? lvl.customGoals : [];
+      }
+      const log = readLocalJson("MIDNIGHT_Log_Data.json");
+      if (log && Array.isArray(log.entries)) {
+        log.entries.forEach(e => { if(e && e.date) RECORDS.push({date:e.date, ms:e.durationMs||0, chars:e.chars||0, src:"log"}); });
+      }
+      const main = readLocalJson("MIDNIGHT_Main_Data.json");
+      if (main && Array.isArray(main.entries)) {
+        main.entries.forEach(e => { if(e && e.date) RECORDS.push({date:e.date, ms:e.durationMs||0, src:"main"}); });
+      }
+      const pesca = readLocalJson("MIDNIGHT_Pesca_Data.json");
+      if (pesca && Array.isArray(pesca.sessions)) {
+        pesca.sessions.forEach(s => { if(s && s.date) RECORDS.push({date:s.date, ms:s.durationMs||0, src:"pesca"}); });
+      }
+      const metas = readLocalJson("MIDNIGHT_Metas_Data.json");
+      METAS = (metas && Array.isArray(metas.goals)) ? metas.goals : [];
+
+      const cfgSaved = readLocalJson("MIDNIGHT_Hub_Config.json");
+      if (cfgSaved) CFG = Object.assign(CFG, cfgSaved);
+    }
+
+    function total() { return RECORDS.reduce((a,r) => a + r.ms, 0); }
+    function bySrc(filterFn) {
+      const m = {lvl:0, log:0, main:0, pesca:0};
+      RECORDS.forEach(r => { if(filterFn && !filterFn(r)) return; m[r.src] = (m[r.src]||0) + r.ms; });
+      return m;
+    }
+    function byDay() {
+      const m = {};
+      RECORDS.forEach(r => {
+        m[r.date] = m[r.date] || {ms:0, lvl:0, log:0, main:0, pesca:0};
+        m[r.date].ms += r.ms;
+        m[r.date][r.src] = (m[r.date][r.src]||0) + r.ms;
+      });
+      return m;
+    }
+    function byCycle() {
+      const m = {};
+      RECORDS.forEach(r => {
+        const k = cycleKey(parseDate(r.date));
+        m[k] = m[k] || {ms:0, lvl:0, log:0, main:0, pesca:0, start:cycleStart(parseDate(r.date))};
+        m[k].ms += r.ms;
+        m[k][r.src] = (m[k][r.src]||0) + r.ms;
+      });
+      return m;
+    }
+
+    // Render Stats
+    function renderStats() {
+      $("#s-total").textContent = fmtHuman(total());
+      const now = new Date(), ym = now.getFullYear() + "-" + pad(now.getMonth() + 1);
+      $("#s-month").textContent = fmtHuman(RECORDS.filter(r => r.date.startsWith(ym)).reduce((a,r) => a + r.ms, 0));
+      const cs = cycleStart(now).getTime();
+      $("#s-cycle").textContent = fmtHuman(RECORDS.filter(r => cycleKey(parseDate(r.date)) === cs).reduce((a,r) => a + r.ms, 0));
+      const d7 = addDays(now, -6), d7s = dateStr(d7);
+      $("#s-week7").textContent = fmtHuman(RECORDS.filter(r => r.date >= d7s).reduce((a,r) => a + r.ms, 0));
+    }
+
+    // Render Distribuição
+    let mode = "all";
+    function renderDist() {
+      const now = new Date(), ym = now.getFullYear() + "-" + pad(now.getMonth() + 1), cs = cycleStart(now).getTime();
+      const f = mode === "month" ? (r => r.date.startsWith(ym)) : mode === "cycle" ? (r => cycleKey(parseDate(r.date)) === cs) : null;
+      const m = bySrc(f), tot = m.lvl + m.log + m.main + m.pesca;
+      ["m-all","m-month","m-cycle"].forEach(id => $("#"+id).classList.remove("active"));
+      $("#m-" + mode).classList.add("active");
+      $("#dist").innerHTML = SRC.map(s => {
+        const v = m[s.key] || 0, pct = tot ? Math.round(v/tot*100) : 0;
+        return '<div class="catrow"><span class="cdot" style="background:'+s.color+'"></span><span class="cname">'+s.label+'</span>'+
+          '<span class="cbar"><i style="width:'+(tot?v/tot*100:0)+'%;background:'+s.color+'"></i></span>'+
+          '<span class="cval">'+(v?fmtHuman(v):"—")+' · '+pct+'%</span></div>';
+      }).join("") + '<div class="catrow" style="margin-top:4px;border-top:1px solid var(--border2);padding-top:8px"><span class="cdot" style="background:transparent"></span><span class="cname"><b>Total</b></span><span class="cbar" style="background:transparent"></span><span class="cval"><b>'+(tot?fmtHuman(tot):"—")+'</b></span></div>';
+    }
+
+    // Render Gráfico
+    function renderChart() {
+      const cv = $("#hub-chart"); if (!cv) return;
+      const wrap = $(".cw"); let cssW = wrap ? wrap.clientWidth : 0;
+      if (!cssW) { requestAnimationFrame(renderChart); return; }
+      const N = 28, day = byDay(), base = new Date(); base.setHours(12, 0, 0, 0); const days = [];
+      for(let i=N-1; i>=0; i--) { const d = addDays(base, -i); days.push({d, k:dateStr(d), v:day[dateStr(d)]||null}); }
+      const maxMs = Math.max(1, ...days.map(x => x.v ? x.v.ms : 0));
+      const W = Math.max(320, cssW-2), H = 240, dpr = window.devicePixelRatio||1;
+      cv.width = W*dpr; cv.height = H*dpr; cv.style.width = W+"px"; cv.style.height = H+"px";
+      const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      const padL = 42, padR = 12, padT = 12, padB = 34, plotW = W - padL - padR, plotH = H - padT - padB;
+      const maxH = Math.max(1, Math.ceil(maxMs/3600000)); ctx.font = "10px sans-serif"; ctx.textBaseline = "middle";
+      for (let hh=0; hh<=maxH; hh+=(maxH>6?2:1)) {
+        const yy = padT + plotH - (hh/maxH)*plotH;
+        ctx.strokeStyle = "#1a2032"; ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
+        ctx.fillStyle = "#5a6480"; ctx.textAlign = "right"; ctx.fillText(hh+"h", padL-6, yy);
+      }
+      const bw = plotW/N;
+      days.forEach((x, i) => {
+        const bx = padL + i*bw + bw*0.15, w = bw*0.7;
+        if (x.v) {
+          let acc = 0;
+          SRC.forEach(s => {
+            const val = x.v[s.key] || 0; if(val <= 0) return;
+            const h = (val/maxMs)*plotH, y = padT + plotH - ((acc+val)/maxMs)*plotH;
+            ctx.fillStyle = s.color; ctx.fillRect(bx, y, w, h);
+            acc += val;
+          });
+        }
+        if (i%4===0 || i===N-1) { ctx.fillStyle = "#5a6480"; ctx.textAlign = "center"; ctx.font = "9px sans-serif"; ctx.fillText(dm(x.d), bx+w/2, H-padB+14); }
+        if (x.d.getDay() === 2) { ctx.strokeStyle = "rgba(245,166,35,.3)"; ctx.setLineDash([2,3]); ctx.beginPath(); ctx.moveTo(bx-bw*0.15, padT); ctx.lineTo(bx-bw*0.15, padT+plotH); ctx.stroke(); ctx.setLineDash([]); }
+      });
+    }
+
+    // Streaks e Ciclos
+    function logCharsByCycle() {
+      const m = {};
+      RECORDS.forEach(r => { if(r.src === "log") { const k = cycleKey(parseDate(r.date)); m[k] = (m[k]||0) + (r.chars||0); } });
+      return m;
+    }
+    function nextCyc(k) { return cycleStart(addDays(new Date(k), 7)).getTime(); }
+    function prevCyc(k) { return cycleStart(addDays(new Date(k), -7)).getTime(); }
+    function streaks() {
+      const m = logCharsByCycle(), cur = cycleStart(new Date()).getTime();
+      const hit = k => (m[k]||0) >= 70;
+      let start = hit(cur) ? cur : prevCyc(cur), curStreak = 0, k = start, g = 0;
+      while (hit(k) && g < 520) { curStreak++; k = prevCyc(k); g++; }
+      const keys = Object.keys(m).map(Number);
+      if (!keys.length) return {cur:0, best:curStreak};
+      let t = Math.min(...keys), run = 0, best = 0, guard = 0;
+      while (t <= cur && guard < 520) { if(hit(t)){ run++; if(run>best) best=run; } else run=0; t=nextCyc(t); guard++; }
+      return {cur:curStreak, best:Math.max(best, curStreak)};
+    }
+    function renderStreak() {
+      const el = $("#hub-streak"); if(!el) return;
+      const st = streaks();
+      el.innerHTML = st.cur > 0
+        ? '🔥 <b style="color:var(--gold)">Ofensiva de log:</b> '+st.cur+' ciclo'+(st.cur>1?'s':'')+' seguidos com 70/70 · recorde <b style="color:var(--text)">'+st.best+'</b>'
+        : '🔥 <b style="color:var(--gold)">Ofensiva de log:</b> sem sequência ativa — feche os 70/70 neste ciclo para começar. Recorde: <b style="color:var(--text)">'+st.best+'</b>';
+    }
+    function renderCycles() {
+      const c = byCycle(), keys = Object.keys(c).map(Number).sort((a,b) => b-a);
+      const logC = logCharsByCycle(), curKey = cycleStart(new Date()).getTime();
+      const body = $("#cyc-body"), empty = $("#cyc-empty");
+      if (!keys.length) { body.innerHTML = ""; empty.style.display = "block"; return; }
+      empty.style.display = "none";
+      body.innerHTML = keys.map(k => {
+        const v = c[k], s = v.start, e = addDays(s, 6), volt = (logC[k]||0)/70, isCur = k === curKey;
+        return '<tr'+(isCur?' class="cur"':'')+'><td>'+dm(s)+' → '+dm(e)+(isCur?' <span class="pill atual">atual</span>':'')+'</td>'+
+          '<td style="text-align:right;color:#4ecb8e">'+(v.lvl?fmtHuman(v.lvl):"—")+'</td>'+
+          '<td style="text-align:right;color:#c9a84c">'+(v.log?fmtHuman(v.log):"—")+'</td>'+
+          '<td style="text-align:right;color:#A330C9">'+(v.main?fmtHuman(v.main):"—")+'</td>'+
+          '<td style="text-align:right;color:#4f7dd6">'+(v.pesca?fmtHuman(v.pesca):"—")+'</td>'+
+          '<td style="text-align:right">'+(volt?(Math.round(volt*10)/10).toLocaleString('pt-BR')+"×":"—")+'</td>'+
+          '<td style="text-align:right;font-weight:600">'+fmtHuman(v.ms)+'</td></tr>';
+      }).join("");
+    }
+
+    // Heatmap
+    function renderHeatmap() {
+      const grid = $("#hm-grid"), months = $("#hm-months"), daysEl = $("#hm-days"); if(!grid) return;
+      const day = byDay(), end = new Date(); end.setHours(12, 0, 0, 0);
+      const back = addDays(end, -364), start = addDays(back, -back.getDay());
+      const levelColor = h => h <= 0 ? "#161d2e" : h < 2 ? "#0e4429" : h < 4 ? "#166534" : h < 6 ? "#22a355" : h < 8 ? "#4ade80" : "#86efac";
+      const weeks = []; let cur = new Date(start);
+      while (cur <= end) {
+        const first = new Date(cur), wk = [];
+        for (let d=0; d<7; d++) {
+          const cell = new Date(cur);
+          if (cell > end) { wk.push(null); }
+          else { const k = dateStr(cell), ms = day[k] ? day[k].ms : 0; wk.push({cell:new Date(cell), ms, h:ms/3600000}); }
+          cur = addDays(cur, 1);
+        }
+        weeks.push({first, wk});
+      }
+      let lastM = -1;
+      months.innerHTML = weeks.map(w => {
+        const m = w.first.getMonth(); let lab = "";
+        if (m !== lastM) { lab = MONTHS[m].slice(0, 3); lastM = m; }
+        return '<span>'+lab+'</span>';
+      }).join("");
+      daysEl.innerHTML = ['','Seg','','Qua','','Sex',''].map(x => '<span>'+x+'</span>').join("");
+      grid.innerHTML = weeks.map(w => '<div class="wk">'+w.wk.map(c => {
+        if (!c) return '<div class="cell" style="background:transparent"></div>';
+        const t = dmy(c.cell) + ' — ' + (c.ms ? fmtHuman(c.ms) : 'sem registro');
+        return '<div class="cell" style="background:'+levelColor(c.h)+'" title="'+t+'"></div>';
+      }).join("")+'</div>').join("");
+    }
+
+    // Fecho e Orçamento
+    function renderFecho() {
+      const box = $("#fecho-box"); if(!box) return;
+      const c = byCycle(), curKey = cycleStart(new Date()).getTime();
+      const prevStart = cycleStart(addDays(new Date(curKey), -1)), prevKey = prevStart.getTime();
+      const v = c[prevKey];
+      if (!v) { box.innerHTML = '<div class="semp">Nenhum ciclo fechado ainda. O fecho aparece após a terça 12h.</div>'; return; }
+      const e = addDays(prevStart, 6);
+      let chars = 0; RECORDS.forEach(r => { if(r.src === "log" && cycleKey(parseDate(r.date)) === prevKey) chars += r.chars || 0; });
+      const voltas = chars / 70;
+      const prev2 = cycleStart(addDays(new Date(prevKey), -1)).getTime(), v2 = c[prev2];
+      let trend = '<span style="color:var(--muted2)">—</span>';
+      if (v2 && v2.ms > 0) {
+        const p = Math.round((v.ms/v2.ms - 1)*100), up = p >= 0;
+        trend = '<span style="color:'+(up?'var(--green)':'var(--amber)')+'">'+(up?'↑':'↓')+' '+Math.abs(p)+'%</span> <span style="color:var(--muted2)">vs ciclo anterior</span>';
+      }
+      const activeDays = new Set(RECORDS.filter(r => cycleKey(parseDate(r.date)) === prevKey).map(r => r.date)).size;
+      box.innerHTML =
+        '<div class="fh"><div><div class="gmeta" style="margin:0">Ciclo '+dm(prevStart)+' → '+dm(e)+'</div><div class="big">'+fmtHuman(v.ms)+'</div></div><div>'+trend+'</div></div>'+
+        '<div class="fg">'+
+          '<div class="fi"><div class="fl">Leveling</div><div class="fv" style="color:#4ecb8e">'+(v.lvl?fmtHuman(v.lvl):"—")+'</div></div>'+
+          '<div class="fi"><div class="fl">Log diário</div><div class="fv" style="color:#c9a84c">'+(v.log?fmtHuman(v.log):"—")+'</div></div>'+
+          '<div class="fi"><div class="fl">Main</div><div class="fv" style="color:#A330C9">'+(v.main?fmtHuman(v.main):"—")+'</div></div>'+
+          '<div class="fi"><div class="fl">Pesca</div><div class="fv" style="color:#4f7dd6">'+(v.pesca?fmtHuman(v.pesca):"—")+'</div></div>'+
+          '<div class="fi"><div class="fl">Voltas do log</div><div class="fv">'+(voltas?(Math.round(voltas*10)/10).toLocaleString('pt-BR')+"× ("+chars+" pers.)":"—")+'</div></div>'+
+          '<div class="fi"><div class="fl">Dias ativos</div><div class="fv">'+activeDays+'/7</div></div>'+
+        '</div>';
+    }
+
+    function renderBudget() {
+      const now = new Date(), cs = cycleStart(now).getTime();
+      const usedMs = RECORDS.filter(r => cycleKey(parseDate(r.date)) === cs).reduce((a,r) => a + r.ms, 0);
+      const budgetMs = (CFG.budgetHours||0) * 3600000;
+      $("#b-used").textContent = fmtHuman(usedMs);
+      const inp = $("#b-input"); if(inp && document.activeElement !== inp) inp.value = CFG.budgetHours || 0;
+      const pill = $("#b-pill"), bar = $("#b-bar"), meta = $("#b-meta");
+      if (!budgetMs) {
+        pill.className = "pill"; pill.textContent = ""; bar.style.width = "0%";
+        meta.textContent = "Defina um teto de horas por ciclo para acompanhar o consumo."; return;
+      }
+      const pct = usedMs / budgetMs * 100; bar.style.width = Math.min(100, pct) + "%";
+      if (usedMs > budgetMs) {
+        pill.className = "pill over"; pill.textContent = "acima do teto";
+        bar.style.background = "linear-gradient(90deg,#e05a5a,#f0a5a5)";
+        meta.innerHTML = "⚠️ Você passou <b>" + fmtHuman(usedMs - budgetMs) + "</b> do teto neste ciclo.";
+      } else {
+        pill.className = "pill ok"; pill.textContent = Math.round(pct) + "%";
+        bar.style.background = "linear-gradient(90deg,var(--green),#6fe0a8)";
+        meta.innerHTML = "Restam <b>" + fmtHuman(budgetMs - usedMs) + "</b> do seu teto neste ciclo.";
+      }
+    }
+
+    // Metas e Resumo
+    function renderMetas() {
+      const box = $("#metas-box"); if(!box) return;
+      if (!METAS.length) { box.innerHTML = '<div style="color:var(--muted2);font-size:12.5px">Nenhuma meta cadastrada ainda.</div>'; return; }
+      const now = new Date(), ck = cycleStart(now).getTime();
+      const oneoff = METAS.filter(g => g.type !== "weekly");
+      const done = oneoff.filter(g => g.type === "counter" ? (g.current||0) >= (g.target||0) : !!g.done).length;
+      let h = '<div class="gmeta" style="margin:0 0 6px">Metas concluídas: <b>' + done + '/' + oneoff.length + '</b></div>';
+      box.innerHTML = h;
+    }
+
+    function renderResumo() {
+      const gx = $("#rz-grid"); if(!gx) return;
+      const now = new Date(), today = dateStr(now);
+      const WD = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+      $("#rz-date").textContent = WD[now.getDay()] + ", " + dmy(now);
+      const cs = cycleStart(now).getTime();
+      const todayMs = RECORDS.filter(r => r.date === today).reduce((a,r) => a + r.ms, 0);
+      const logToday = RECORDS.filter(r => r.src === "log" && r.date === today).reduce((a,r) => a + (r.chars||0), 0);
+      const cycleChars = RECORDS.filter(r => r.src === "log" && cycleKey(parseDate(r.date)) === cs).reduce((a,r) => a + (r.chars||0), 0);
+      const totalChars = (LVL_CHARS && LVL_CHARS.length) ? LVL_CHARS.length : 70;
+      const doneL = (LVL_CHARS||[]).filter(c => c.done).length, leftL = totalChars - doneL;
+      const weekUps = (LVL_CHARS||[]).filter(c => c.done && c.doneAt && cycleKey(new Date(c.doneAt)) === cs).length;
+      const budgetMs = (CFG.budgetHours||0) * 3600000, usedMs = RECORDS.filter(r => cycleKey(parseDate(r.date)) === cs).reduce((a,r) => a + r.ms, 0);
+      const voltas = cycleChars / 70;
+
+      const items = [
+        ['⏱️', 'Tempo hoje', todayMs ? fmtHuman(todayMs) : '<span style="color:var(--muted2)">nada ainda</span>'],
+        ['🎮', 'Log hoje', logToday > 0 ? ('✓ ' + logToday + ' pers.') : '<span style="color:var(--amber)">pendente</span>'],
+        ['🔁', 'Log no ciclo', cycleChars + '/70' + (cycleChars >= 70 ? ' ✓' : '') + (voltas > 1 ? (' · ' + (Math.round(voltas*10)/10).toLocaleString('pt-BR') + '×') : '')],
+        ['⚔️', 'Leveling', leftL > 0 ? ('faltam ' + leftL + ' · ' + weekUps + ' na semana') : '🎉 70/70']
+      ];
+      if (budgetMs) {
+        const rem = budgetMs - usedMs;
+        items.push(['⏳', 'Orçamento', rem >= 0 ? ('restam ' + fmtHuman(rem)) : ('<span style="color:var(--red)">' + fmtHuman(-rem) + ' acima</span>')]);
+      }
+      gx.innerHTML = items.map(it => '<div class="rzi"><div class="rzic">' + it[0] + '</div><div><div class="rzl">' + it[1] + '</div><div class="rzv">' + it[2] + '</div></div></div>').join("");
+    }
+
+    function renderAll() {
+      loadRecords();
+      renderResumo();
+      renderStats();
+      renderStreak();
+      renderBudget();
+      renderDist();
+      renderChart();
+      renderHeatmap();
+      renderFecho();
+      renderCycles();
+      renderMetas();
+    }
+
+    // Eventos
+    $("#m-all").onclick = () => { mode = "all"; renderDist(); };
+    $("#m-month").onclick = () => { mode = "month"; renderDist(); };
+    $("#m-cycle").onclick = () => { mode = "cycle"; renderDist(); };
+    $("#m-refresh").onclick = renderAll;
+    $("#b-input").onchange = e => {
+      CFG.budgetHours = Math.max(0, parseInt(e.target.value, 10) || 0);
+      localStorage.setItem("MIDNIGHT_Hub_Config.json", JSON.stringify(CFG));
+      renderBudget();
+    };
+    window.addEventListener("resize", () => { if($("#hub-chart")) renderChart(); });
+
+    // Boot inicial
+    renderAll();
+  </script>
+</body>
+</html>
