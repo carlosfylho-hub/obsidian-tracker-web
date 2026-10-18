@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIDNIGHT · Perfil do Operador</title>
+  <style>
+    :root {
+      --panel: #0f1420;
+      --panel2: #111828;
+      --border: #252d42;
+      --border2: #1a2032;
+      --gold: #c9a84c;
+      --gold2: #e4c76a;
+      --text: #d4ddf0;
+      --muted: #8a94a8;
+      --muted2: #5a6480;
+      --green: #4ecb8e;
+      --amber: #f5a623;
+      --red: #e05a5a;
+      --accent: #7c6cff;
+      --blue: #4f7dd6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--panel2);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand h1 {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      color: var(--gold);
+      letter-spacing: .5px;
+    }
+    .brand p { font-size: 11px; color: var(--muted); }
+    nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    nav a {
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    nav a:hover { filter: brightness(1.2); color: var(--text); }
+    nav a.active {
+      background: var(--gold);
+      color: #0b0f18;
+      border-color: var(--gold);
+    }
+    .main-wrap {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
+    }
+    #perfil-root {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span style="font-size: 22px;">🌙</span>
+      <div>
+        <h1>MIDNIGHT</h1>
+        <p>Warband & Economy Web App</p>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html">Hub</a>
+      <a href="atividades.html">Atividades</a>
+      <a href="profissoes.html">Profissões</a>
+      <a href="metas.html">Metas</a>
+      <a href="perfil.html" class="active">Perfil</a>
+      <a href="economia.html">Economia</a>
+    </nav>
+  </header>
+
+  <div class="main-wrap">
+    <div id="perfil-root"></div>
+  </div>
+
+  <script>
+    // --- ADAPTADOR DO OBSIDIAN (FALSO) ---
+    const app = {
+      vault: {
+        adapter: {
+          exists: async (path) => localStorage.getItem("MDN_" + path) !== null,
+          read: async (path) => localStorage.getItem("MDN_" + path) || "{}",
+          write: async (path, data) => localStorage.setItem("MDN_" + path, data),
+          list: async (folder) => ({ files: [] }),
+          remove: async (path) => localStorage.removeItem("MDN_" + path)
+        },
+        getAbstractFileByPath: (path) => null
+      }
+    };
+    const dv = { current: () => ({ file: { folder: "" } }) };
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      dv.container = document.getElementById("perfil-root");
+      
+      const root = dv.container;
+      const folder = dv.current().file.folder;
+      const adapter = app.vault.adapter;
+      const RESET_DOW=2, RESET_HOUR=12;
+      const $=s=>root.querySelector(s);
+      const pad=n=>String(n).padStart(2,"0");
+      function fmtHuman(ms){const t=Math.floor(ms/60000),h=Math.floor(t/60),m=t%60;return h>0?h+"h"+(m?" "+pad(m):""):m+"min";}
+      function fmtNum(n){return Math.round(n).toLocaleString('pt-BR');}
+      function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+      function dm(d){return pad(d.getDate())+"/"+pad(d.getMonth()+1);}
+      function dateStr(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+      function parseDate(s){const p=(s||"").split("-").map(n=>parseInt(n,10));return new Date(p[0],(p[1]||1)-1,p[2]||1,12,0,0);}
+      function cycleStart(d){ const t=new Date(d); t.setHours(RESET_HOUR,0,0,0); const diff=((t.getDay()-RESET_DOW)+7)%7; t.setDate(t.getDate()-diff); if(t>d) t.setDate(t.getDate()-7); return t; }
+      function cycleKey(d){ return cycleStart(d).getTime(); }
+      function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+
+      let D={rec:[],logByDay:{},at90:0,pescaMs:0,pescaN:0,metas:[]};
+      async function readJson(f){ try{ const p=(folder?folder+"/":"")+f; if(await adapter.exists(p)) return JSON.parse(await adapter.read(p)); }catch(e){} return null; }
+      async function loadAll(){
+        const rec=[]; let at90=0,pescaMs=0,pescaN=0,metas=[]; const logByDay={};
+        const lvl=await readJson("MIDNIGHT_Leveling_Data.json");
+        if(lvl){ if(Array.isArray(lvl.sessions)) lvl.sessions.forEach(s=>{ if(s&&s.endedAt) rec.push({date:dateStr(new Date(s.endedAt)),ms:s.durationMs||0,src:"lvl"}); }); if(Array.isArray(lvl.chars)) at90=lvl.chars.filter(c=>c.done).length; }
+        const log=await readJson("MIDNIGHT_Log_Data.json");
+        if(log&&Array.isArray(log.entries)) log.entries.forEach(e=>{ if(e&&e.date){ rec.push({date:e.date,ms:e.durationMs||0,src:"log"}); logByDay[e.date]=(logByDay[e.date]||0)+(e.chars||0); } });
+        const main=await readJson("MIDNIGHT_Main_Data.json");
+        if(main&&Array.isArray(main.entries)) main.entries.forEach(e=>{ if(e&&e.date) rec.push({date:e.date,ms:e.durationMs||0,src:"main"}); });
+        const pesca=await readJson("MIDNIGHT_Pesca_Data.json");
+        if(pesca&&Array.isArray(pesca.sessions)) pesca.sessions.forEach(s=>{ if(s&&s.date){ rec.push({date:s.date,ms:s.durationMs||0,src:"pesca"}); pescaMs+=s.durationMs||0; pescaN++; } });
+        const mt=await readJson("MIDNIGHT_Metas_Data.json");
+        if(mt&&Array.isArray(mt.goals)) metas=mt.goals;
+        D={rec,logByDay,at90,pescaMs,pescaN,metas};
+      }
+      await loadAll();
+
+      function totalMs(){ return D.rec.reduce((a,r)=>a+r.ms,0); }
+      function msByDay(){ const m={}; D.rec.forEach(r=>{ m[r.date]=(m[r.date]||0)+r.ms; }); return m; }
+      function msByCycle(){ const m={}; D.rec.forEach(r=>{ const k=cycleKey(parseDate(r.date)); m[k]=(m[k]||0)+r.ms; }); return m; }
+      function logCharsByCycle(){ const m={}; Object.keys(D.logByDay).forEach(d=>{ const k=cycleKey(parseDate(d)); m[k]=(m[k]||0)+D.logByDay[d]; }); return m; }
+      function metasDone(){ return D.metas.filter(g=> g.type==="counter" ? (g.current||0)>=(g.target||0) : (g.type==="check"?!!g.done:false)).length; }
+      function ciclos70(){ const m=logCharsByCycle(); return Object.values(m).filter(v=>v>=70).length; }
+
+      function nextCyc(k){ return cycleStart(addDays(new Date(k),7)).getTime(); }
+      function prevCyc(k){ return cycleStart(addDays(new Date(k),-7)).getTime(); }
+      function streaks(){
+        const m=logCharsByCycle(); const cur=cycleKey(new Date());
+        const hit=k=>(m[k]||0)>=70;
+        let start=hit(cur)?cur:prevCyc(cur), curStreak=0, k=start, g=0;
+        while(hit(k)&&g<520){ curStreak++; k=prevCyc(k); g++; }
+        const keys=Object.keys(m).map(Number);
+        if(!keys.length) return {cur:0,best:curStreak};
+        let t=Math.min(...keys), run=0, best=0, guard=0;
+        while(t<=cur&&guard<520){ if(hit(t)){run++; if(run>best)best=run;} else run=0; t=nextCyc(t); guard++; }
+        return {cur:curStreak,best:Math.max(best,curStreak)};
+      }
+
+      function stats(){
+        const tot=totalMs(), horas=tot/3600000;
+        const charsLog=Object.values(D.logByDay).reduce((a,b)=>a+b,0);
+        const st=streaks();
+        return { tot, horas, charsLog, at90:D.at90, pescaMs:D.pescaMs, pescaH:D.pescaMs/3600000, pescaN:D.pescaN, metasDone:metasDone(), ciclos70:ciclos70(), streakCur:st.cur, streakBest:st.best };
+      }
+      function computeXP(s){
+        const parts=[
+          {label:"Tempo de jogo", xp:Math.round(s.horas)*10, det:Math.round(s.horas)+"h × 10"},
+          {label:"Personagens logados", xp:s.charsLog*1, det:fmtNum(s.charsLog)+" × 1"},
+          {label:"No nível 90", xp:s.at90*50, det:s.at90+" × 50"},
+          {label:"Sessões de pesca", xp:s.pescaN*5, det:s.pescaN+" × 5"},
+          {label:"Metas concluídas", xp:s.metasDone*100, det:s.metasDone+" × 100"},
+          {label:"Ciclos 70/70", xp:s.ciclos70*150, det:s.ciclos70+" × 150"}
+        ];
+        const total=parts.reduce((a,p)=>a+p.xp,0);
+        return {total,parts};
+      }
+      function levelFromXP(xp){ let lvl=1, acc=0, need=300; while(xp>=acc+need && lvl<999){ acc+=need; lvl++; need=300+lvl*200; } return {lvl,into:xp-acc,need,acc}; }
+      function titleFor(l){ if(l>=45)return "Imperador do Ouro"; if(l>=30)return "Magnata de Azeroth"; if(l>=20)return "Barão do Ouro"; if(l>=15)return "Especulador do Bando"; if(l>=10)return "Comerciante de Azeroth"; if(l>=5)return "Mercador Novato"; return "Aprendiz de Goblin"; }
+
+      function achievements(s){
+        return [
+          {i:"🎯",n:"Primeiro 90",v:s.at90,t:1},
+          {i:"⚔️",n:"Metade do bando (35)",v:s.at90,t:35},
+          {i:"👑",n:"Bando completo (70)",v:s.at90,t:70},
+          {i:"📋",n:"Logueiro (1.000 pers.)",v:s.charsLog,t:1000},
+          {i:"📚",n:"Logueiro Mestre (10.000)",v:s.charsLog,t:10000},
+          {i:"🔁",n:"Constância (4 ciclos 70/70)",v:s.ciclos70,t:4},
+          {i:"🏅",n:"Maratona (12 ciclos 70/70)",v:s.ciclos70,t:12},
+          {i:"🔥",n:"Em chamas (4 ciclos seguidos)",v:s.streakBest,t:4},
+          {i:"🚀",n:"Imparável (12 seguidos)",v:s.streakBest,t:12},
+          {i:"🎣",n:"Pescador (10h)",v:Math.floor(s.pescaH),t:10},
+          {i:"🐟",n:"Pescador Mestre (100h)",v:Math.floor(s.pescaH),t:100},
+          {i:"⏳",n:"Focado (50h de jogo)",v:Math.floor(s.horas),t:50},
+          {i:"🔥",n:"Dedicação (200h)",v:Math.floor(s.horas),t:200},
+          {i:"✅",n:"Metas em dia (5)",v:s.metasDone,t:5},
+          {i:"🗂️",n:"Colecionador de metas (25)",v:s.metasDone,t:25}
+        ];
+      }
+
+      function records(){
+        const day=msByDay(), cyc=msByCycle(), logC=logCharsByCycle();
+        const bestDayMs=Math.max(0,...Object.values(day));
+        const bestDay=Object.keys(day).find(k=>day[k]===bestDayMs);
+        const bestCycMs=Math.max(0,...Object.values(cyc));
+        const bestCyc=Object.keys(cyc).find(k=>cyc[k]==bestCycMs);
+        const bestLogDay=Math.max(0,...Object.values(D.logByDay));
+        const bestLogDayK=Object.keys(D.logByDay).find(k=>D.logByDay[k]===bestLogDay);
+        const pescaSes=D.rec.filter(r=>r.src==="pesca");
+        const bestPesca=Math.max(0,...pescaSes.map(r=>r.ms));
+        const bestVoltasCyc=Math.max(0,...Object.values(logC))/70;
+        const stk=streaks();
+        return [
+          {i:"⏱️",n:"Mais tempo num dia",v: bestDayMs?fmtHuman(bestDayMs)+(bestDay?" ("+dm(parseDate(bestDay))+")":""):"—"},
+          {i:"📅",n:"Melhor semana (tempo)",v: bestCycMs?fmtHuman(bestCycMs)+(bestCyc?" (ciclo "+dm(new Date(Number(bestCyc)))+")":""):"—"},
+          {i:"📋",n:"Mais personagens num dia",v: bestLogDay?bestLogDay+(bestLogDayK?" ("+dm(parseDate(bestLogDayK))+")":""):"—"},
+          {i:"🎣",n:"Maior sessão de pesca",v: bestPesca?fmtHuman(bestPesca):"—"},
+          {i:"🔁",n:"Melhor ciclo de log",v: bestVoltasCyc? (Math.round(bestVoltasCyc*10)/10).toLocaleString('pt-BR')+"× voltas":"—"},
+          {i:"🔥",n:"Ofensiva atual (ciclos 70/70)",v: stk.cur?stk.cur+"×":"—"},
+          {i:"🏅",n:"Recorde de ofensiva",v: stk.best?stk.best+"×":"—"}
+        ];
+      }
+
+      function comparativos(){
+        const cyc=msByCycle(), logC=logCharsByCycle(); const cur=cycleKey(new Date());
+        const closedKeys=Object.keys(cyc).map(Number).filter(k=>k<cur);
+        const avg = closedKeys.length? closedKeys.reduce((a,k)=>a+cyc[k],0)/closedKeys.length : 0;
+        const curMs=cyc[cur]||0;
+        const pescaCyc=D.rec.filter(r=>r.src==="pesca"&&cycleKey(parseDate(r.date))===cur).reduce((a,r)=>a+r.ms,0);
+        const pescaClosed=closedKeys.map(k=>D.rec.filter(r=>r.src==="pesca"&&cycleKey(parseDate(r.date))===k).reduce((a,r)=>a+r.ms,0));
+        const pescaAvg=pescaClosed.length?pescaClosed.reduce((a,b)=>a+b,0)/pescaClosed.length:0;
+        const out=[];
+        const arrow=(cur,avg)=>{ if(avg<=0) return '<span style="color:var(--muted2)">—</span>'; const p=Math.round((cur/avg-1)*100); const up=p>=0; return '<span style="color:'+(up?'var(--green)':'var(--amber)')+'">'+(up?'↑':'↓')+' '+Math.abs(p)+'%</span> <span style="color:var(--muted2)">vs média</span>'; };
+        out.push({n:"Tempo neste ciclo", v:fmtHuman(curMs), c:arrow(curMs,avg)});
+        out.push({n:"Pesca neste ciclo", v:fmtHuman(pescaCyc), c:arrow(pescaCyc,pescaAvg)});
+        return out;
+      }
+
+      root.innerHTML=`
+      <style>
+      .mtx{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--amber:#f5a623;--accent:#7c6cff;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+      .mtx *{box-sizing:border-box}
+      .mtx .grid{display:grid;gap:20px}
+      .mtx .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:20px;max-width:100%}
+      .mtx h2.mt{font-family:Georgia,serif;font-size:14px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center}
+      .mtx .lvlwrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+      .mtx .lvlbadge{width:84px;height:84px;border-radius:50%;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#20283e,#0d1220);border:2px solid var(--gold);box-shadow:0 0 24px rgba(201,168,76,.25)}
+      .mtx .lvlbadge .lv{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+      .mtx .lvlbadge .num{font-family:Georgia,serif;font-size:30px;font-weight:bold;color:var(--gold2);line-height:1}
+      .mtx .lvlinfo{flex:1;min-width:200px}
+      .mtx .title{font-family:Georgia,serif;font-size:20px;color:var(--gold2);margin-bottom:2px}
+      .mtx .prog{height:12px;background:var(--panel2);border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin:8px 0 4px}
+      .mtx .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+      .mtx .sub{font-size:12px;color:var(--muted)}
+      .mtx .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+      .mtx .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:10px;text-align:center}
+      .mtx .stat .n{font-family:Georgia,serif;font-size:20px;font-weight:bold;color:var(--gold)}
+      .mtx .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+      .mtx .ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+      .mtx .badge{display:flex;align-items:center;gap:10px;border:1px solid var(--border2);border-radius:10px;padding:10px;background:var(--panel);opacity:.55}
+      .mtx .badge.on{opacity:1;border-color:rgba(201,168,76,.4);background:linear-gradient(180deg,rgba(201,168,76,.08),transparent)}
+      .mtx .badge .ic{font-size:22px;flex:0 0 auto}
+      .mtx .badge .nm{font-size:12.5px;font-weight:600}
+      .mtx .badge .pg{font-size:10.5px;color:var(--muted2)}
+      .mtx .badge.on .pg{color:var(--green)}
+      .mtx .miniprog{height:5px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:4px}
+      .mtx .miniprog>i{display:block;height:100%;background:var(--gold)}
+      .mtx table{width:100%;border-collapse:collapse;font-size:13px}
+      .mtx td{padding:8px 6px;border-bottom:1px solid var(--border2)}
+      .mtx tr:last-child td{border-bottom:none}
+      .mtx .rk{color:var(--muted)}
+      .mtx .rv{text-align:right;color:var(--text);font-weight:600}
+      .mtx button.refresh{background:linear-gradient(180deg,var(--green),#3bb47c);color:#0b0f18;border:none;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+      @media (max-width:560px){.mtx .stats{grid-template-columns:repeat(2,1fr)}}
+      </style>
+      <div class="mtx">
+        <div class="card">
+          <h2 class="mt"><span>🏆 Operador</span><button class="refresh" id="p-refresh">↻ Atualizar</button></h2>
+          <div class="lvlwrap">
+            <div class="lvlbadge"><span class="lv">Nível</span><span class="num" id="p-lvl">1</span></div>
+            <div class="lvlinfo">
+              <div class="title" id="p-title">—</div>
+              <div class="prog"><i id="p-xpbar" style="width:0%"></i></div>
+              <div class="sub" id="p-xpsub"></div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="st-h">0h</div><div class="l">Tempo total</div></div>
+            <div class="stat"><div class="n" id="st-90">0</div><div class="l">No nível 90</div></div>
+            <div class="stat"><div class="n" id="st-log">0</div><div class="l">Personagens logados</div></div>
+            <div class="stat"><div class="n" id="st-cy">0</div><div class="l">Ciclos 70/70</div></div>
+          </div>
+          <div id="p-streak" style="margin-top:14px;font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--border2);border-radius:10px;padding:10px 12px"></div>
+        </div>
+        <div class="grid" style="margin-top:20px">
+          <div class="card"><h2 class="mt">🥇 Recordes pessoais</h2><table id="rec-body"></table></div>
+          <div class="card"><h2 class="mt">📊 Este ciclo vs. sua média</h2><table id="cmp-body"></table></div>
+          <div class="card"><h2 class="mt">🎖️ Conquistas <span style="font-size:11px;color:var(--muted2);font-weight:400" id="ach-count"></span></h2><div class="ach" id="ach-box"></div></div>
+        </div>
+      </div>`;
+
+      function renderAll(){
+        const s=stats(), xp=computeXP(s), L=levelFromXP(xp.total);
+        $("#p-lvl").textContent=L.lvl;
+        $("#p-title").textContent=titleFor(L.lvl);
+        $("#p-xpbar").style.width=Math.min(100,L.into/L.need*100)+"%";
+        $("#p-xpsub").innerHTML="XP total: <b>"+fmtNum(xp.total)+"</b> · faltam <b>"+fmtNum(L.need-L.into)+"</b> pro nível "+(L.lvl+1);
+        $("#st-h").textContent=fmtHuman(s.tot); $("#st-90").textContent=s.at90+"/70"; $("#st-log").textContent=fmtNum(s.charsLog); $("#st-cy").textContent=s.ciclos70;
+        $("#p-streak").innerHTML = s.streakCur>0
+          ? '🔥 Ofensiva atual: <b style="color:var(--gold2)">'+s.streakCur+' ciclo'+(s.streakCur>1?'s':'')+' seguidos</b> com log 70/70 · recorde <b>'+s.streakBest+'</b>'
+          : 'Sem ofensiva ativa — feche o log 70/70 neste ciclo para começar. Recorde: <b>'+s.streakBest+'</b>';
+        
+        $("#rec-body").innerHTML=records().map(r=>'<tr><td class="rk">'+r.i+' '+r.n+'</td><td class="rv">'+r.v+'</td></tr>').join("");
+        $("#cmp-body").innerHTML=comparativos().map(c=>'<tr><td class="rk">'+c.n+'</td><td class="rv">'+c.v+' &nbsp; '+c.c+'</td></tr>').join("");
+        
+        const acs=achievements(s), on=acs.filter(a=>a.v>=a.t).length;
+        $("#ach-count").textContent="· "+on+"/"+acs.length+" destravadas";
+        $("#ach-box").innerHTML=acs.map(a=>{ const done=a.v>=a.t, pct=Math.min(100,a.v/a.t*100);
+          return '<div class="badge'+(done?" on":"")+'"><span class="ic">'+a.i+'</span><div style="flex:1"><div class="nm">'+a.n+'</div><div class="pg">'+(done?"✓ destravada":fmtNum(a.v)+" / "+fmtNum(a.t))+'</div>'+(done?'':'<div class="miniprog"><i style="width:'+pct+'%"></i></div>')+'</div></div>';
+        }).join("");
+      }
+
+      $("#p-refresh").onclick=async()=>{ await loadAll(); renderAll(); };
+      window.addEventListener("focus",async()=>{ if($("#p-lvl")&&document.body.contains($("#p-lvl"))){ await loadAll(); renderAll(); } });
+      
+      renderAll();
+    });
+  </script>
+</body>
+</html>
