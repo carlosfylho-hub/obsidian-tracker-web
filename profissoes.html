@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -115,7 +115,6 @@
   </div>
 
   <script>
-    // --- ADAPTADOR DO OBSIDIAN (FALSO) ---
     const app = {
       vault: {
         adapter: {
@@ -157,7 +156,7 @@
       CROOT.querySelector("#_mpbar").innerHTML=_TABS.map(t=>'<button class="mptab" data-t="'+t[0]+'">'+t[1]+'</button>').join("");
       CROOT.querySelectorAll(".mptab").forEach(b=>b.onclick=async()=>{ _active=b.dataset.t; await _ensure(_active); _apply(); setTimeout(_redraw,60); try{ await _adapter.write(_SPATH,JSON.stringify({active:_active})); }catch(e){} });
 
-      /* ============ MIDNIGHT · Melhores ============ */
+      /* ============ 1. Melhores Crafts ============ */
       async function run_melhores(root){
         const folder=dv.current().file.folder;
         const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
@@ -311,11 +310,10 @@
         render();
       }
 
-      /* ============ MIDNIGHT · Materiais ============ */
+      /* ============ 2. Materiais ============ */
       async function run_materiais(root){
         const folder = dv.current().file.folder;
         const DATA_PATH = (folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
-        const CSV_PATH  = (folder?folder+"/":"")+"MIDNIGHT_Materiais.csv";
         const adapter = app.vault.adapter;
 
         const CATS = [
@@ -333,7 +331,6 @@
         function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
         function nk(s){ return String(s||"").trim().replace(/\s+/g," ").toLowerCase(); }
         function fmtPrice(n){ n=Number(n)||0; if(n<=0)return "—"; const a=Math.abs(n); if(a>=1e6)return (n/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M"; if(a>=1e3)return (n/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k"; if(a>=100)return n.toLocaleString('pt-BR',{maximumFractionDigits:0}); return n.toLocaleString('pt-BR',{maximumFractionDigits:1}); }
-        function parseNum(v){ const s=String(v==null?"":v).trim(); if(!s)return NaN; return parseFloat(s.replace(/[^0-9.\-]/g,"")); }
 
         const KNOWN={};
         CATS.forEach(([cat,items])=>items.forEach(it=>{ KNOWN[nk(it)]={cat,name:it}; }));
@@ -345,7 +342,7 @@
         let S = await loadState();
 
         function parseCSVLine(line){ const res=[]; let cur="",q=false; for(let i=0;i<line.length;i++){ const c=line[i]; if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; } else { if(c==='"')q=true; else if(c===','){res.push(cur);cur="";} else cur+=c; } } res.push(cur); return res; }
-        function parseAvg(text){ const out=[]; String(text||"").split(/\r?\n/).forEach(raw=>{ const line=raw.trim(); if(!line)return; const cells=parseCSVLine(line); if(cells.length<2)return; const p0=(cells[0]||"").trim(); const name=(cells[1]||"").trim(); if(!name)return; if(/^price$/i.test(p0)\vert{}\vert{}/^name$/i.test(name))return; let price=parseFloat(p0.replace(/[^0-9.\-]/g,"")); if(!isFinite(price))price=0; out.push({name,price}); }); return out; }
+        function parseAvg(text){ const out=[]; String(text||"").split(/\r?\n/).forEach(raw=>{ const line=raw.trim(); if(!line)return; const cells=parseCSVLine(line); if(cells.length<2)return; const p0=(cells[0]||"").trim(); const name=(cells[1]||"").trim(); if(!name)return; if(/^price$/i.test(p0)||/^name$/i.test(name))return; let price=parseFloat(p0.replace(/[^0-9.\-]/g,"")); if(!isFinite(price))price=0; out.push({name,price}); }); return out; }
 
         root.innerHTML = `<style>
         .mzx{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
@@ -386,8 +383,6 @@
         .mzx .mrow.miss .mn{color:var(--muted2)} .mzx .mrow.miss .mp{color:var(--muted2);font-weight:400}
         .mzx .semp{color:var(--muted2);font-size:12.5px;text-align:center;padding:22px 0}
         .mzx .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:8px}
-        .mzx .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
-        .mzx .toast.show{opacity:1}
         @media (max-width:620px){.mzx .stats{grid-template-columns:repeat(2,1fr)} .mzx .fgrid{grid-template-columns:repeat(2,1fr)} .mzx .catgrid{columns:1}}
         </style>
         <div class="mzx">
@@ -399,7 +394,7 @@
               <div class="chkwrap"><label class="chk"><input type="checkbox" id="mz-merge" checked> Manter antigos</label></div>
             </div>
             <div class="prev" id="mz-prev">Cole o texto acima.</div>
-            <div class="ctrls"><button class="add" id="mz-btn">📥 Importar e organizar</button><button class="ghost" id="mz-csv" style="display:none">⬇ CSV</button><button class="ghost" id="mz-clear">Limpar preços</button></div>
+            <div class="ctrls"><button class="add" id="mz-btn">📥 Importar e organizar</button><button class="ghost" id="mz-clear">Limpar preços</button></div>
           </div>
           <div class="stats" style="margin-top:18px">
             <div class="stat"><div class="n" id="mz-k1">0</div><div class="l">Materiais com preço</div></div>
@@ -415,23 +410,19 @@
             <div class="catgrid" id="mz-cats"></div>
             <div id="mz-outros" style="margin-top:6px"></div>
           </div>
-          <div class="ftr">Dados salvos no cache do navegador · baseado no esquema Kaychak Crafting Sheet</div>
         </div>`;
-
-        let toastT=null;
-        function toast(m){ let t=$(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; root.querySelector(".mzx").appendChild(t);} t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
 
         function priceOf(key){ const e=S.prices[key]; return e?Number(e.gold)||0:0; }
 
         function updatePrev(){ const el=$("#mz-prev"); if(!el)return; const p=parseAvg($("#mz-imp").value); if(!p.length){ el.innerHTML='Cole o texto acima — reconhece o formato <b>Price,"Name",…</b>.'; return; } let known=0; p.forEach(x=>{ if(KNOWN[nk(x.name)])known++; }); const toG=$("#mz-copper").checked; const ex=p.slice(0,2).map(x=>esc(x.name)+" ("+fmtPrice(toG?x.price/10000:x.price)+")").join(" · "); el.innerHTML='<b>'+p.length+'</b> linha(s) · <b style="color:var(--green)">'+known+'</b> são materiais catalogados. Ex.: '+ex+(p.length>2?" …":""); }
 
         async function doImport(){
-          const parsed=parseAvg($("#mz-imp").value); if(!parsed.length){ toast("Nada reconhecido"); return; }
+          const parsed=parseAvg($("#mz-imp").value); if(!parsed.length){ return; }
           const toG=$("#mz-copper").checked;
           if(!$("#mz-merge").checked) S.prices={};
           parsed.forEach(p=>{ const key=nk(p.name); const gold=toG?p.price/10000:p.price; const kn=KNOWN[key]; S.prices[key]={name:kn?kn.name:p.name, gold:gold}; });
           S.importedAt=Date.now(); S.copper=toG;
-          await saveState(); $("#mz-imp").value=""; updatePrev(); render(); toast(parsed.length+" preços importados");
+          await saveState(); $("#mz-imp").value=""; updatePrev(); render();
         }
 
         function render(){
@@ -471,7 +462,7 @@
         $("#mz-btn").onclick=doImport;
         $("#mz-imp").oninput=updatePrev;
         $("#mz-copper").onchange=updatePrev;
-        $("#mz-clear").onclick=async()=>{ if(!Object.keys(S.prices).length)return; if(confirm("Apagar todos os preços importados?")){ S.prices={}; S.importedAt=0; await saveState(); render(); toast("Preços apagados"); } };
+        $("#mz-clear").onclick=async()=>{ if(!Object.keys(S.prices).length)return; if(confirm("Apagar todos os preços importados?")){ S.prices={}; S.importedAt=0; await saveState(); render(); } };
         $("#mz-search").oninput=render;
         $("#mz-sort").onchange=async e=>{ S.sort=e.target.value==="price"?"price":"cat"; await saveState(); render(); };
 
@@ -481,6 +472,1091 @@
 
         if($("#mz-sort"))$("#mz-sort").value=S.sort;
         render(); updatePrev();
+      }
+
+      /* ============ 3. Alquimia ============ */
+      async function run_alquimia(root){
+        const folder = dv.current().file.folder;
+        const DATA_PATH = (folder?folder+"/":"")+"MIDNIGHT_Alquimia_Data.json";
+        const MAT_PATH  = (folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const adapter = app.vault.adapter;
+
+        const KIND = { pot:{yield:5, flat:13.75, mbase:1.533}, phial:{yield:4, flat:11, mbase:1.5}, flask:{yield:2, flat:5.5, mbase:1.533} };
+
+        const REC = [
+         ["Poções de Luz","pot","Silvermoon Health Potion Tier 2",[[6,"Tranquility Bloom Tier 1"]]],
+         ["Poções de Luz","pot","Lightfused Mana Potion Tier 2",[[8,"Tranquility Bloom Tier 1"],[3,"Mana Lily Tier 1"]]],
+         ["Poções de Luz","pot","Refreshing Serum Tier 2",[[8,"Tranquility Bloom Tier 1"],[3,"Sanguithorn Tier 1"]]],
+         ["Poções de Luz","pot","Light's Potential Tier 2",[[1,"Mote of Light"],[8,"Tranquility Bloom Tier 1"],[3,"Azeroot Tier 1"],[3,"Argentleaf Tier 1"]]],
+         ["Poções de Luz","pot","Potion of Zealotry Tier 2",[[1,"Mote of Light"],[8,"Tranquility Bloom Tier 1"],[10,"Azeroot Tier 1"]]],
+         ["Poções de Luz","pot","Light's Preservation Tier 2",[[2,"Mote of Light"],[4,"Tranquility Bloom Tier 1"],[3,"Azeroot Tier 1"]]],
+         ["Poções de Luz","pot","Enlightenment Tonic Tier 2",[[3,"Tranquility Bloom Tier 1"]]],
+         ["Poções Void","pot","Draught of Rampant Abandon Tier 2",[[3,"Mote of Primal Energy"],[8,"Tranquility Bloom Tier 1"],[3,"Sanguithorn Tier 1"],[3,"Mana Lily Tier 1"]]],
+         ["Poções Void","pot","Potion of Devoured Dreams Tier 2",[[2,"Mote of Wild Magic"],[8,"Tranquility Bloom Tier 1"],[4,"Mana Lily Tier 1"]]],
+         ["Poções Void","pot","Potion of Recklessness Tier 2",[[2,"Mote of Primal Energy"],[8,"Tranquility Bloom Tier 1"],[4,"Azeroot Tier 1"]]],
+         ["Poções Void","pot","Amani Extract Tier 2",[[8,"Tranquility Bloom Tier 1"],[3,"Azeroot Tier 1"]]],
+         ["Poções Void","pot","Void-Shrouded Tincture Tier 2",[[2,"Mote of Pure Void"],[8,"Tranquility Bloom Tier 1"],[4,"Sanguithorn Tier 1"]]],
+         ["Phials","phial","Haranir Phial of Finesse Tier 2",[[2,"Mote of Primal Energy"],[8,"Tranquility Bloom Tier 1"],[3,"Azeroot Tier 1"],[6,"Mana Lily Tier 1"]]],
+         ["Phials","phial","Haranir Phial of Ingenuity Tier 2",[[2,"Mote of Pure Void"],[8,"Tranquility Bloom Tier 1"],[6,"Sanguithorn Tier 1"],[3,"Mana Lily Tier 1"]]],
+         ["Phials","phial","Haranir Phial of Perception Tier 2",[[2,"Mote of Wild Magic"],[8,"Tranquility Bloom Tier 1"],[6,"Azeroot Tier 1"],[3,"Argentleaf Tier 1"]]],
+         ["Flasks","flask","Flask of the Shattered Sun Tier 2",[[1,"Nocturnal Lotus"],[2,"Mote of Primal Energy"],[8,"Azeroot Tier 1"],[6,"Argentleaf Tier 1"]]],
+         ["Flasks","flask","Flask of the Blood Knights Tier 2",[[1,"Nocturnal Lotus"],[2,"Mote of Wild Magic"],[6,"Sanguithorn Tier 1"],[8,"Argentleaf Tier 1"]]],
+         ["Flasks","flask","Flask of the Magisters Tier 2",[[1,"Nocturnal Lotus"],[2,"Mote of Pure Void"],[8,"Sanguithorn Tier 1"],[6,"Mana Lily Tier 1"]]],
+         ["Flasks","flask","Flask of Thalassian Resistance Tier 2",[[1,"Nocturnal Lotus"],[2,"Mote of Light"],[6,"Azeroot Tier 1"],[8,"Mana Lily Tier 1"]]]
+        ];
+
+        const $=s=>root.querySelector(s);
+        function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+        function nk(s){ return String(s||"").trim().replace(/\s+/g," ").toLowerCase(); }
+        function fmtK(n){ n=Number(n)||0; const s=n<0?"−":""; const a=Math.abs(n); let v; if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M"; else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k"; else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1}); return s+v; }
+        function fmtN(n){ return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1}); }
+        function parseNum(v){ const s=String(v==null?"":v).trim().replace(",","."); if(!s)return NaN; return parseFloat(s.replace(/[^0-9.\-]/g,"")); }
+        const GRP_COLOR={"Poções de Luz":"#f5a623","Poções Void":"#a330c9","Phials":"#22d3ee","Flasks":"#4ecb8e"};
+
+        let MATPRICES={};
+        async function loadMat(){ MATPRICES={}; try{ if(await adapter.exists(MAT_PATH)){ const p=JSON.parse(await adapter.read(MAT_PATH)); if(p&&p.prices){ Object.keys(p.prices).forEach(k=>{ MATPRICES[k]=Number(p.prices[k].gold)||0; }); } } }catch(e){} }
+        function price(name){ return MATPRICES[nk(name)]||0; }
+
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        const PROFLABEL="Alquimia";
+        const KGROUP={pot:"Poção",phial:"Phial",flask:"Flask"};
+        const CONC_DEF0={"Poção":20,"Phial":35,"Flask":50,"Gema":40,"Encantamento":40,"Inscrição":35,"Ferraria":70,"Engenharia":55};
+        let CONC={def:Object.assign({},CONC_DEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CONC_DEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CONC_DEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CONC_DEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+        function concKeyOf(name){return PROFLABEL+"|"+nk(name);}
+        function concOf(name,group){const k=concKeyOf(name);if(CONC.item[k]!=null)return Number(CONC.item[k])||0;return Number(CONC.def[group]||0)||0;}
+
+        function freshState(){ return { res:31, mc:34, cut:5, ah:{}, sort:"profit" }; }
+        async function loadState(){ try{ if(await adapter.exists(DATA_PATH)){ const p=JSON.parse(await adapter.read(DATA_PATH)); const s=freshState(); if(typeof p.res==="number")s.res=p.res; if(typeof p.mc==="number")s.mc=p.mc; if(typeof p.cut==="number")s.cut=p.cut; if(p.ah&&typeof p.ah==="object")s.ah=p.ah; if(["profit","roi","cost","value","ah","name","grp"].includes(p.sort))s.sort=p.sort; return s; } }catch(e){} return freshState(); }
+        let saving=false,pending=false;
+        async function saveState(){ if(saving){pending=true;return;} saving=true; try{ await adapter.write(DATA_PATH,JSON.stringify(S)); }catch(e){} saving=false; if(pending){pending=false;saveState();} }
+        let S = await loadState();
+        await loadMat();
+        await loadConc();
+
+        function calc(r){
+          const [grp,kind,name,mats]=r; const K=KIND[kind];
+          let raw=0, missing=[]; mats.forEach(([q,m])=>{ const p=price(m); if(p<=0)missing.push(m); raw+=q*p; });
+          raw+=K.flat;
+          const cost = raw * (1 - (S.res/100)*0.3);
+          const ahOv = S.ah[nk(name)];
+          const ahImp = price(name);
+          const ah = (ahOv!=null)?ahOv : ahImp;
+          const fromImport = (ahOv==null && ahImp>0);
+          const mult = 1 + (S.mc/100)*K.mbase;
+          const value = ah * K.yield * mult * (1 - S.cut/100);
+          const profit = value - cost;
+          const roi = cost>0 ? profit/cost*100 : 0;
+          const recipe = mats.map(([q,m])=>q+"× "+m).join(" + ")+" + "+K.flat+" (base)";
+          const cgroup=KGROUP[kind]||grp; const conc=concOf(name,cgroup); const lconc=conc>0?profit/conc:null;
+          return {grp,kind,name,mats,cost,ah,fromImport,value,profit,roi,missing,recipe,yield:K.yield,noAh:(ah<=0),cgroup,conc,lconc};
+        }
+        function allRows(){ return REC.map(calc); }
+
+        root.innerHTML = `<style>
+        .aqx{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .aqx *{box-sizing:border-box}
+        .aqx .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .aqx h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .aqx .params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+        .aqx .param{display:flex;flex-direction:column;gap:3px}
+        .aqx .param label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+        .aqx .param input{width:90px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px}
+        .aqx .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+        .aqx .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:12px;text-align:center}
+        .aqx .stat .n{font-family:Georgia,serif;font-size:18px;font-weight:bold;color:var(--gold);line-height:1.15}
+        .aqx .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .aqx .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .aqx .toolbar input,.aqx .toolbar select{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .aqx .toolbar input{flex:1;min-width:150px}
+        .aqx .tw{width:100%;overflow-x:auto}
+        .aqx table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .aqx th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        .aqx th:first-child,.aqx td:first-child{text-align:left}
+        .aqx th.sorted{color:var(--gold)}
+        .aqx td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .aqx td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .aqx .tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:10px;margin-right:6px;vertical-align:middle}
+        .aqx .imp{font-size:9px;color:var(--cyan);margin-left:5px}
+        .aqx input.cell{width:64px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .aqx input.cc{width:46px}
+        .aqx input.cc.ov{border-color:var(--cyan)}
+        .aqx input.cell:focus{outline:none;border-color:var(--gold)}
+        .aqx .pos{color:var(--green)} .aqx .neg{color:var(--red)}
+        .aqx .pf{font-weight:700}
+        .aqx .warn{color:var(--red);font-size:9px;margin-left:5px;cursor:help}
+        .aqx .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .aqx button{cursor:pointer;border:none;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#0b0f18;background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .aqx button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        @media (max-width:620px){.aqx .stats{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="aqx">
+          <div class="card" style="margin-bottom:18px">
+            <h2 class="mt"><span>⚙️ Parâmetros</span><button class="ghost" id="a-refresh">↻ atualizar preços (Materiais)</button></h2>
+            <div class="params">
+              <div class="param"><label>Resourcefulness %</label><input type="number" id="p-res" step="1"></div>
+              <div class="param"><label>Multicraft %</label><input type="number" id="p-mc" step="1"></div>
+              <div class="param"><label>Taxa de AH %</label><input type="number" id="p-cut" step="0.5"></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted2)">Custo = (Σ mats × preço + base) × (1 − res%×0,3) · Valor/craft = preço AH × rendimento × (1 + mc%×fator) × (1 − taxa).</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="a-k1">—</div><div class="l">Maior lucro/craft</div></div>
+            <div class="stat"><div class="n" id="a-k2">—</div><div class="l">Maior ROI%</div></div>
+            <div class="stat"><div class="n" id="a-k3">0</div><div class="l">Com preço AH</div></div>
+            <div class="stat"><div class="n" id="a-k4">—</div><div class="l">Lucro/craft médio</div></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>⚗️ Crafts de alquimia</span><span style="display:flex;gap:8px"><button class="ghost" id="a-reset">padrão (31/34/5)</button></span></h2>
+            <div class="toolbar">
+              <input type="text" id="a-search" placeholder="🔎 Buscar craft…">
+              <select id="a-grp"><option value="">Todos os grupos</option><option>Poções de Luz</option><option>Poções Void</option><option>Phials</option><option>Flasks</option></select>
+            </div>
+            <div class="tw">
+              <table>
+                <thead><tr>
+                  <th data-s="name">Craft</th>
+                  <th data-s="cost">Custo</th>
+                  <th data-s="value">Valor/craft</th>
+                  <th data-s="ah">Preço AH</th>
+                  <th data-s="profit">Lucro/craft</th>
+                  <th data-s="roi">ROI%</th>
+                  <th>Conc</th>
+                  <th data-s="lconc">Lucro/Conc</th>
+                </tr></thead>
+                <tbody id="a-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>`;
+
+        let searchTerm="", grpFilter="";
+        const SORTMAP={profit:"profit",roi:"roi",cost:"cost",value:"value",ah:"ah",name:"name",grp:"grp",lconc:"lconc"};
+        function render(){
+          if($("#p-res")&&document.activeElement!==$("#p-res"))$("#p-res").value=S.res;
+          if($("#p-mc")&&document.activeElement!==$("#p-mc"))$("#p-mc").value=S.mc;
+          if($("#p-cut")&&document.activeElement!==$("#p-cut"))$("#p-cut").value=S.cut;
+          let rows=allRows();
+          const all=rows.slice();
+          if(searchTerm){ const t=nk(searchTerm); rows=rows.filter(r=>nk(r.name).includes(t)); }
+          if(grpFilter){ rows=rows.filter(r=>r.grp===grpFilter); }
+          const sk=SORTMAP[S.sort]||"profit";
+          if(sk==="lconc")rows=rows.filter(r=>r.lconc!=null && !r.noAh);
+          rows.sort((a,b)=>{ if(sk==="name"||sk==="grp")return String(a[sk]).localeCompare(String(b[sk])); return (b[sk]||0)-(a[sk]||0); });
+          
+          const withAh=all.filter(r=>!r.noAh);
+          const bestP=withAh.slice().sort((a,b)=>b.profit-a.profit)[0];
+          const bestR=withAh.slice().sort((a,b)=>b.roi-a.roi)[0];
+          const avgP=withAh.length?withAh.reduce((a,r)=>a+r.profit,0)/withAh.length:0;
+          $("#a-k1").innerHTML=bestP?('<span style="font-size:12.5px">'+esc(bestP.name.replace(/ Tier 2$/,""))+'</span><br>'+fmtK(bestP.profit)):"—";
+          $("#a-k2").innerHTML=bestR?('<span style="font-size:12.5px">'+esc(bestR.name.replace(/ Tier 2$/,""))+'</span><br>'+fmtN(bestR.roi)+"%"):"—";
+          $("#a-k3").textContent=withAh.length+"/"+all.length;
+          $("#a-k4").textContent=withAh.length?fmtK(avgP):"—";
+          root.querySelectorAll("th[data-s]").forEach(th=>th.classList.toggle("sorted",th.dataset.s===S.sort));
+          
+          const body=$("#a-body");
+          body.innerHTML=rows.map(r=>{ const col=GRP_COLOR[r.grp]||"#888"; const key=nk(r.name);
+            const warn=r.missing.length?'<span class="warn" title="Sem preço: '+esc(r.missing.join(", "))+'">⚠</span>':'';
+            return '<tr data-k="'+key+'">'+
+              '<td class="name" title="'+esc(r.recipe)+'"><span class="tag" style="background:'+col+'22;color:'+col+';border:1px solid '+col+'55">'+esc(r.grp.replace("Poções ","").replace("de Luz","Luz"))+'</span>'+esc(r.name.replace(/ Tier 2$/,""))+warn+'</td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.value))+'</td>'+
+              '<td><input class="cell" data-ah="'+key+'" value="'+(r.ah>0?fmtN(r.ah):"")+'" placeholder="—">'+(r.fromImport?'<span class="imp">⟳</span>':'')+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.profit))+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtN(r.roi)+"%")+'</td>'+
+              '<td><input class="cell cc'+(CONC.item[concKeyOf(r.name)]!=null?" ov":"")+'" data-cc="'+esc(concKeyOf(r.name))+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[r.cgroup]||"—")+'" title="Concentração deste craft (vazio = padrão do tipo '+esc(r.cgroup)+')"></td>'+
+              '<td class="pf '+((r.lconc==null)?"":(r.lconc>=0?"pos":"neg"))+'">'+(r.noAh||r.lconc==null?'<span style="color:var(--muted2)">—</span>':fmtK(r.lconc))+'</td></tr>';
+          }).join("");
+          
+          body.querySelectorAll("input[data-ah]").forEach(inp=>inp.onchange=async()=>{ const key=inp.dataset.ah, v=parseNum(inp.value), imp=MATPRICES[key]||0;
+            if(isNaN(v)){ delete S.ah[key]; } else if(imp>0 && Math.abs(v-imp)<0.05){ delete S.ah[key]; } else { S.ah[key]=v; }
+            await saveState(); render(); });
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{ const k=inp.dataset.cc, v=parseNum(inp.value); if(isNaN(v)||inp.value.trim()===""){ delete CONC.item[k]; } else { CONC.item[k]=v; } await saveConc(); render(); });
+        }
+
+        async function setP(f,v){ if(isNaN(v))return; if(f==="res")S.res=v; else if(f==="mc")S.mc=v; else if(f==="cut")S.cut=v; await saveState(); render(); }
+        $("#p-res").onchange=e=>setP("res",parseNum(e.target.value));
+        $("#p-mc").onchange=e=>setP("mc",parseNum(e.target.value));
+        $("#p-cut").onchange=e=>setP("cut",parseNum(e.target.value));
+        root.querySelectorAll("th[data-s]").forEach(th=>th.onclick=async()=>{ S.sort=th.dataset.s; await saveState(); render(); });
+        $("#a-search").oninput=e=>{ searchTerm=e.target.value; render(); };
+        $("#a-grp").onchange=e=>{ grpFilter=e.target.value; render(); };
+        $("#a-refresh").onclick=async()=>{ await loadMat(); render(); };
+        $("#a-reset").onclick=async()=>{ S.res=31;S.mc=34;S.cut=5; await saveState(); render(); };
+
+        if(window.__aqFocus){ window.removeEventListener("focus",window.__aqFocus); }
+        window.__aqFocus=async()=>{ const el=$("#a-body"); if(!el||!document.body.contains(el))return; if(root.querySelector("input:focus"))return; try{ S=await loadState(); await loadMat(); await loadConc(); }catch(e){} render(); };
+        window.addEventListener("focus",window.__aqFocus);
+
+        render();
+      }
+
+      /* ============ 4. Joalheria ============ */
+      async function run_joalheria(root){
+        const folder=dv.current().file.folder;
+        const DATA_PATH=(folder?folder+"/":"")+"MIDNIGHT_Joalheria_Data.json";
+        const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const adapter=app.vault.adapter;
+        const META={"resF": 0.45, "res": 17.0, "mc": 26.0};
+        const ITEMS=[{"n": "Sin'dorei Lens Tier 2", "a": "Sin'dorei Lens Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Glimmering Gemdust Tier 1": 1.0, "Crystalline Glass Tier 1": 3.0}, "k": 0.0}, {"n": "Kaleidoscopic Prism Tier 2", "a": "Kaleidoscopic Prism Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Flawless Amani Lapis Tier 1": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 10.0}, "k": 0.0}, {"n": "Sunglass Vial Tier 2", "a": "Sunglass Vial Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Crystalline Glass Tier 1": 5.0, "Duskshrouded Stone Tier 1": 1.0}, "k": 0.0}, {"n": "Prismatic Focusing Iris Tier 2", "a": "Prismatic Focusing Iris Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Glimmering Gemdust Tier 1": 2.0}, "k": 0.0}, {"n": "Stabilizing Gemstone Bandolier Tier 2", "a": "Stabilizing Gemstone Bandolier Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Amani Lapis Tier 1": 1.0, "Tenebrous Amethyst Tier 1": 1.0, "Harandar Peridot Tier 1": 1.0, "Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 3.0}, "k": 0.0}, {"n": "Indecipherable Eversong Diamond Tier 2", "a": "Indecipherable Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0}, {"n": "Powerful Eversong Diamond Tier 2", "a": "Powerful Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0}, {"n": "Stoic Eversong Diamond Tier 2", "a": "Stoic Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0}, {"n": "Telluric Eversong Diamond Tier 2", "a": "Telluric Eversong Diamond Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Petrified Root": 2.0, "Eversong Diamond Tier 1": 1.0}, "k": 0.0}, {"n": "Flawless Deadly Lapis Tier 2", "a": "Flawless Deadly Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Masterful Lapis Tier 2", "a": "Flawless Masterful Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Quick Lapis Tier 2", "a": "Flawless Quick Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Versatile Lapis Tier 2", "a": "Flawless Versatile Lapis Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Wild Magic": 3.0, "Petrified Root": 1.0, "Flawless Amani Lapis Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Deadly Garnet Tier 2", "a": "Flawless Deadly Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Masterful Garnet Tier 2", "a": "Flawless Masterful Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Quick Garnet Tier 2", "a": "Flawless Quick Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Versatile Garnet Tier 2", "a": "Flawless Versatile Garnet Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Light": 3.0, "Petrified Root": 1.0, "Flawless Sanguine Garnet Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Deadly Amethyst Tier 2", "a": "Flawless Deadly Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Masterful Amethyst Tier 2", "a": "Flawless Masterful Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Quick Amethyst Tier 2", "a": "Flawless Quick Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Versatile Amethyst Tier 2", "a": "Flawless Versatile Amethyst Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Pure Void": 3.0, "Petrified Root": 1.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Deadly Peridot Tier 2", "a": "Flawless Deadly Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Masterful Peridot Tier 2", "a": "Flawless Masterful Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Quick Peridot Tier 2", "a": "Flawless Quick Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}, {"n": "Flawless Versatile Peridot Tier 2", "a": "Flawless Versatile Peridot Tier 2", "m": "A", "y": 1.0, "mb": 2.013, "r": {"Mote of Primal Energy": 3.0, "Petrified Root": 1.0, "Flawless Harandar Peridot Tier 1": 1.0, "Glimmering Gemdust Tier 1": 5.0}, "k": 0.0}];
+        const HAS_A=ITEMS.some(i=>i.m==="A");
+
+        const $=s=>root.querySelector(s);
+        function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+        function nk(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase();}
+        function fmtK(n){n=Number(n)||0;const s=n<0?"−":"";const a=Math.abs(n);let v;if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M";else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k";else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1});return s+v;}
+        function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1});}
+        function parseNum(x){const s=String(x==null?"":x).trim().replace(",",".");if(!s)return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,""));}
+
+        let MAT={};
+        async function loadMat(){MAT={};try{if(await adapter.exists(MAT_PATH)){const p=JSON.parse(await adapter.read(MAT_PATH));if(p&&p.prices)Object.keys(p.prices).forEach(k=>{MAT[k]=Number(p.prices[k].gold)||0;});}}catch(e){}}
+        function priceOf(nm){return MAT[nk(nm)]||0;}
+
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        const PROFLABEL="Joalheria", CGROUP="Gema";
+        const CONC_DEF0={"Poção":20,"Phial":35,"Flask":50,"Gema":40,"Encantamento":40,"Inscrição":35,"Ferraria":70,"Engenharia":55};
+        let CONC={def:Object.assign({},CONC_DEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CONC_DEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CONC_DEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CONC_DEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+        function concKeyOf(name){return PROFLABEL+"|"+nk(name);}
+        function concOf(name){const k=concKeyOf(name);if(CONC.item[k]!=null)return Number(CONC.item[k])||0;return Number(CONC.def[CGROUP]||0)||0;}
+
+        function freshState(){return {res:META.res,mc:META.mc,cut:5,ah:{},sort:"profit"};}
+        async function loadState(){try{if(await adapter.exists(DATA_PATH)){const p=JSON.parse(await adapter.read(DATA_PATH));const s=freshState();if(typeof p.res==="number")s.res=p.res;if(typeof p.mc==="number")s.mc=p.mc;if(typeof p.cut==="number")s.cut=p.cut;if(p.ah&&typeof p.ah==="object")s.ah=p.ah;if(["profit","roi","cost","ah","name"].includes(p.sort))s.sort=p.sort;return s;}}catch(e){}return freshState();}
+        let saving=false,pending=false;
+        async function saveState(){if(saving){pending=true;return;}saving=true;try{await adapter.write(DATA_PATH,JSON.stringify(S));}catch(e){}saving=false;if(pending){pending=false;saveState();}}
+        let S=await loadState();
+        await loadMat();
+        await loadConc();
+
+        function calc(it){
+          let miss=[],c=it.k;
+          for(const m in it.r){const p=priceOf(m);if(p<=0)miss.push(m);c+=it.r[m]*p;}
+          const cost=c*(1-(S.res/100)*META.resF);
+          const ahOv=S.ah[nk(it.n)],ahImp=priceOf(it.a),ah=(ahOv!=null)?ahOv:ahImp,fromImp=(ahOv==null&&ahImp>0);
+          const cut=1-S.cut/100; let value,profit;
+          if(it.m==="A"){const mult=1+(S.mc/100)*it.mb;value=ah*it.y*mult*cut;profit=value-cost;}
+          else{value=cut>0?cost/cut:0;profit=ah-value;}
+          const roi=cost>0?profit/cost*100:0;
+          const conc=concOf(it.n); const lconc=conc>0?profit/conc:null;
+          return {n:it.n,a:it.a,m:it.m,cost,ah,fromImp,value,profit,roi,conc,lconc,miss,nr:(Object.keys(it.r).length===0),noAh:(ah<=0),
+                  recipe:Object.keys(it.r).map(k=>(Math.round(it.r[k]*100)/100)+"× "+k).join(" + ")};
+        }
+        function rows(){return ITEMS.map(calc);}
+
+        root.innerHTML=`<style>
+        .joa-wrap{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .joa-wrap *{box-sizing:border-box}
+        .joa-wrap .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .joa-wrap h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .joa-wrap .params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+        .joa-wrap .param{display:flex;flex-direction:column;gap:3px}
+        .joa-wrap .param label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+        .joa-wrap .param input{width:88px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px}
+        .joa-wrap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+        .joa-wrap .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:12px;text-align:center}
+        .joa-wrap .stat .n{font-family:Georgia,serif;font-size:18px;font-weight:bold;color:var(--gold);line-height:1.15}
+        .joa-wrap .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .joa-wrap .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .joa-wrap .toolbar input{flex:1;min-width:150px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .joa-wrap .tw{width:100%;overflow-x:auto}
+        .joa-wrap table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .joa-wrap th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        .joa-wrap th:first-child,.joa-wrap td:first-child{text-align:left}
+        .joa-wrap th.sorted{color:var(--gold)}
+        .joa-wrap td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .joa-wrap td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .joa-wrap .imp{font-size:9px;color:var(--cyan);margin-left:5px}
+        .joa-wrap input.cell{width:64px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .joa-wrap input.cell:focus{outline:none;border-color:var(--gold)}
+        .joa-wrap input.cc{width:46px}
+        .joa-wrap input.cc.ov{border-color:var(--cyan)}
+        .joa-wrap .pos{color:var(--green)} .joa-wrap .neg{color:var(--red)}
+        .joa-wrap .pf{font-weight:700}
+        .joa-wrap .warn{color:var(--red);font-size:9px;margin-left:5px;cursor:help}
+        .joa-wrap .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .joa-wrap button{cursor:pointer;border:none;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#0b0f18;background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .joa-wrap button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        @media (max-width:620px){.joa-wrap .stats{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="joa-wrap">
+          <div class="card" style="margin-bottom:18px">
+            <h2 class="mt"><span>⚙️ Parâmetros</span><button class="ghost" id="joa-refresh">↻ atualizar preços (Materiais)</button></h2>
+            <div class="params">
+              <div class="param"><label>Resourcefulness %</label><input type="number" id="joa-res" step="0.1"></div>
+              <div class="param" id="joa-mcwrap"><label>Multicraft %</label><input type="number" id="joa-mc" step="0.1"></div>
+              <div class="param"><label>Taxa de AH %</label><input type="number" id="joa-cut" step="0.5"></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted2)" id="joa-note"></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="joa-k1">—</div><div class="l">Maior lucro/item</div></div>
+            <div class="stat"><div class="n" id="joa-k2">—</div><div class="l">Maior ROI%</div></div>
+            <div class="stat"><div class="n" id="joa-k3">0</div><div class="l">Com preço AH</div></div>
+            <div class="stat"><div class="n" id="joa-k4">—</div><div class="l">Lucro/item médio</div></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>🧮 Crafts</span><button class="ghost" id="joa-reset">padrão</button></h2>
+            <div class="toolbar"><input type="text" id="joa-search" placeholder="🔎 Buscar craft…"></div>
+            <div class="tw"><table><thead><tr>
+              <th data-s="name">Craft</th><th data-s="cost">Custo</th><th>Valor/craft</th><th data-s="ah">Preço AH</th><th data-s="profit">Lucro/item</th><th data-s="roi">ROI%</th><th>Conc</th><th data-s="lconc">Lucro/Conc</th>
+            </tr></thead><tbody id="joa-body"></tbody></table></div>
+          </div>
+        </div>`;
+
+        let searchTerm="";
+        const SORTMAP={profit:"profit",roi:"roi",cost:"cost",ah:"ah",name:"n",lconc:"lconc"};
+        function render(){
+          if($("#joa-res")&&document.activeElement!==$("#joa-res"))$("#joa-res").value=S.res;
+          if($("#joa-mc")&&document.activeElement!==$("#joa-mc"))$("#joa-mc").value=S.mc;
+          if($("#joa-cut")&&document.activeElement!==$("#joa-cut"))$("#joa-cut").value=S.cut;
+          if($("#joa-mcwrap"))$("#joa-mcwrap").style.display=HAS_A?"":"none";
+          $("#joa-note").innerHTML = HAS_A
+            ? "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Valor/craft = AH × rendimento × (1 + mc%×base) × (1 − taxa)."
+            : "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Lucro = preço AH − custo/(1 − taxa).";
+          let rs=rows(); const all=rs.slice();
+          if(searchTerm){const t=nk(searchTerm);rs=rs.filter(r=>nk(r.n).includes(t));}
+          const sk=SORTMAP[S.sort]||"profit";
+          if(sk==="lconc")rs=rs.filter(r=>r.lconc!=null && !r.noAh && !r.nr);
+          rs.sort((a,b)=>{if(sk==="n")return String(a.n).localeCompare(String(b.n));return (b[sk]||0)-(a[sk]||0);});
+          const withAh=all.filter(r=>!r.noAh && !r.nr);
+          const bp=withAh.slice().sort((a,b)=>b.profit-a.profit)[0], br=withAh.slice().sort((a,b)=>b.roi-a.roi)[0];
+          const avg=withAh.length?withAh.reduce((a,r)=>a+r.profit,0)/withAh.length:0;
+          $("#joa-k1").innerHTML=bp?('<span style="font-size:12px">'+esc(bp.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtK(bp.profit)):"—";
+          $("#joa-k2").innerHTML=br?('<span style="font-size:12px">'+esc(br.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtN(br.roi)+"%"):"—";
+          $("#joa-k3").textContent=withAh.length+"/"+all.length;
+          $("#joa-k4").textContent=withAh.length?fmtK(avg):"—";
+          root.querySelectorAll("th[data-s]").forEach(th=>th.classList.toggle("sorted",th.dataset.s===S.sort));
+          const body=$("#joa-body");
+          body.innerHTML=rs.map(r=>{const key=nk(r.n);
+            const warn=r.nr?'<span class="warn" title="Receita não detectada no .xlsx — custo pode estar incompleto">⚠</span>':(r.miss.length?'<span class="warn" title="Sem preço: '+esc(r.miss.join(", "))+'">⚠</span>':'');
+            return '<tr data-k="'+key+'">'+
+              '<td class="name" title="'+esc(r.recipe)+'">'+esc(r.n.replace(/ Tier ([12])$/," T$1"))+warn+'</td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+(r.noAh&&r.m==="A"?'<span style="color:var(--muted2)">—</span>':fmtK(r.value))+'</td>'+
+              '<td><input class="cell" data-ah="'+key+'" value="'+(r.ah>0?fmtN(r.ah):"")+'" placeholder="—">'+(r.fromImp?'<span class="imp">⟳</span>':'')+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.profit))+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtN(r.roi)+"%")+'</td>'+
+              '<td><input class="cell cc'+(CONC.item[concKeyOf(r.n)]!=null?" ov":"")+'" data-cc="'+esc(concKeyOf(r.n))+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[CGROUP]||"—")+'" title="Concentração deste craft (vazio = padrão do tipo '+esc(CGROUP)+')"></td>'+
+              '<td class="pf '+((r.lconc==null)?"":(r.lconc>=0?"pos":"neg"))+'">'+(r.noAh||r.lconc==null?'<span style="color:var(--muted2)">—</span>':fmtK(r.lconc))+'</td></tr>';
+          }).join("");
+          body.querySelectorAll("input[data-ah]").forEach(inp=>inp.onchange=async()=>{const key=inp.dataset.ah,vv=parseNum(inp.value),imp=MAT[key]||0;if(isNaN(vv)){delete S.ah[key];}else if(imp>0&&Math.abs(vv-imp)<0.05){delete S.ah[key];}else{S.ah[key]=vv;}await saveState();render();});
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{const k=inp.dataset.cc,vv=parseNum(inp.value);if(isNaN(vv)||inp.value.trim()===""){delete CONC.item[k];}else{CONC.item[k]=vv;}await saveConc();render();});
+        }
+
+        async function setP(f,v){if(isNaN(v))return;S[f]=v;await saveState();render();}
+        $("#joa-res").onchange=e=>setP("res",parseNum(e.target.value));
+        $("#joa-mc").onchange=e=>setP("mc",parseNum(e.target.value));
+        $("#joa-cut").onchange=e=>setP("cut",parseNum(e.target.value));
+        root.querySelectorAll("th[data-s]").forEach(th=>th.onclick=async()=>{S.sort=th.dataset.s;await saveState();render();});
+        $("#joa-search").oninput=e=>{searchTerm=e.target.value;render();};
+        $("#joa-refresh").onclick=async()=>{await loadMat();render();};
+        $("#joa-reset").onclick=async()=>{S.res=META.res;S.mc=META.mc;S.cut=5;await saveState();render();};
+        if(window.__pf__joalheria){window.removeEventListener("focus",window.__pf__joalheria);}
+        window.__pf__joalheria=async()=>{const el=$("#joa-body");if(!el||!document.body.contains(el))return;if(root.querySelector("input:focus"))return;try{S=await loadState();await loadMat();await loadConc();}catch(e){}render();};
+        window.addEventListener("focus",window.__pf__joalheria);
+        render();
+      }
+
+      /* ============ 5. Encantamento ============ */
+      async function run_encantamento(root){
+        const folder=dv.current().file.folder;
+        const DATA_PATH=(folder?folder+"/":"")+"MIDNIGHT_Encantamento_Data.json";
+        const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const adapter=app.vault.adapter;
+        const META={"resF": 0.36, "res": 25.0, "mc": 34.0};
+        const ITEMS=[{"n": "Enchant Tool - Amani Perception Tier 2", "a": "Enchant Tool - Amani Perception Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Refulgent Copper Ingot Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Tool - Haranir Finesse Tier 2", "a": "Enchant Tool - Haranir Finesse Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Refulgent Copper Ingot Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Tool - Sin'dorei Deftness Tier 2", "a": "Enchant Tool - Sin'dorei Deftness Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 20.0, "Sterling Alloy Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Tool - Amani Resourcefulness Tier 2", "a": "Enchant Tool - Amani Resourcefulness Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Refulgent Copper Ingot Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Tool - Haranir Multicrafting Tier 2", "a": "Enchant Tool - Haranir Multicrafting Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Sterling Alloy Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Tool - Ren'dorei Ingenuity Tier 2", "a": "Enchant Tool - Ren'dorei Ingenuity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 20.0, "Gloaming Alloy Tier 1": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Boots - Farstrider's Hunt Tier 2", "a": "Enchant Boots - Farstrider's Hunt Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 10.0, "Fantastic Fur": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Boots - Lynx's Dexterity Tier 2", "a": "Enchant Boots - Lynx's Dexterity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 10.0, "Carving Canine": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Boots - Shaladrassil's Roots Tier 2", "a": "Enchant Boots - Shaladrassil's Roots Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 10.0, "Azeroot Tier 1": 20.0, "Eversinging Dust Tier 1": 10.0, "Radiant Shard Tier 1": 5.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Chest - Mark of Nalorakk Tier 2", "a": "Enchant Chest - Mark of Nalorakk Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Majestic Claw": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Chest - Mark of the Magister Tier 2", "a": "Enchant Chest - Mark of the Magister Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 5.0, "Arcanoweave Bolt Tier 1": 2.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Chest - Mark of the Rootwarden Tier 2", "a": "Enchant Chest - Mark of the Rootwarden Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Majestic Fin": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Chest - Mark of the Worldsoul Tier 2", "a": "Enchant Chest - Mark of the Worldsoul Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Majestic Hide": 1.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Ring - Eyes of the Eagle Tier 2", "a": "Enchant Ring - Eyes of the Eagle Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 15.0, "Peerless Plumage": 2.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Ring - Nature's Fury Tier 2", "a": "Enchant Ring - Nature's Fury Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Ring - Silvermoon's Alacrity Tier 2", "a": "Enchant Ring - Silvermoon's Alacrity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Ring - Silvermoon's Tenacity Tier 2", "a": "Enchant Ring - Silvermoon's Tenacity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Ring - Zul'jin's Mastery Tier 2", "a": "Enchant Ring - Zul'jin's Mastery Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 15.0, "Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0, "Dawn Crystal Tier 1": 1.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Helm - Blessing of Speed Tier 2", "a": "Enchant Helm - Blessing of Speed Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0}, {"n": "Enchant Helm - Empowered Blessing of Speed Tier 2", "a": "Enchant Helm - Empowered Blessing of Speed Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Helm - Rune of Avoidance Tier 2", "a": "Enchant Helm - Rune of Avoidance Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0}, {"n": "Enchant Helm - Empowered Rune of Avoidance Tier 2", "a": "Enchant Helm - Empowered Rune of Avoidance Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Helm - Hex of Leeching Tier 2", "a": "Enchant Helm - Hex of Leeching Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0}, {"n": "Enchant Helm - Empowered Hex of Leeching Tier 2", "a": "Enchant Helm - Empowered Hex of Leeching Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Shoulders - Akil'zon's Swiftness Tier 2", "a": "Enchant Shoulders - Akil'zon's Swiftness Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Shoulders - Amirdrassil's Grace Tier 2", "a": "Enchant Shoulders - Amirdrassil's Grace Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 2.0}, "k": 0.0}, {"n": "Enchant Shoulders - Flight of the Eagle Tier 2", "a": "Enchant Shoulders - Flight of the Eagle Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0}, {"n": "Enchant Shoulders - Nature's Grace Tier 2", "a": "Enchant Shoulders - Nature's Grace Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0}, {"n": "Enchant Shoulders - Silvermoon's Mending Tier 2", "a": "Enchant Shoulders - Silvermoon's Mending Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 20.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0}, "k": 0.0}, {"n": "Enchant Shoulders - Thalassian Recovery Tier 2", "a": "Enchant Shoulders - Thalassian Recovery Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Eversinging Dust Tier 1": 15.0, "Radiant Shard Tier 1": 3.0}, "k": 0.0}, {"n": "Enchant Weapon - Acuity of the Ren'dorei Tier 2", "a": "Enchant Weapon - Acuity of the Ren'dorei Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 5.0, "Flawless Tenebrous Amethyst Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 3.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Arcane Mastery Tier 2", "a": "Enchant Weapon - Arcane Mastery Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 5.0, "Arcanoweave Bolt Tier 1": 2.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 15.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Berserker's Rage Tier 2", "a": "Enchant Weapon - Berserker's Rage Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Flawless Amani Lapis Tier 1": 1.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Flames of the Sin'Dorei Tier 2", "a": "Enchant Weapon - Flames of the Sin'Dorei Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 5.0, "Sunfire Silk Bolt Tier 1": 2.0, "Eversinging Dust Tier 1": 25.0, "Radiant Shard Tier 1": 15.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Jan'alai's Precision Tier 2", "a": "Enchant Weapon - Jan'alai's Precision Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Majestic Fin": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 5.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Strength of Halazzi Tier 2", "a": "Enchant Weapon - Strength of Halazzi Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 5.0, "Majestic Claw": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 5.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Worldsoul Aegis Tier 2", "a": "Enchant Weapon - Worldsoul Aegis Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Flawless Harandar Peridot Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Worldsoul Cradle Tier 2", "a": "Enchant Weapon - Worldsoul Cradle Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Flawless Harandar Peridot Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}, {"n": "Enchant Weapon - Worldsoul Tenacity Tier 2", "a": "Enchant Weapon - Worldsoul Tenacity Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 5.0, "Flawless Harandar Peridot Tier 1": 1.0, "Eversinging Dust Tier 1": 20.0, "Radiant Shard Tier 1": 10.0, "Dawn Crystal Tier 1": 2.0, "Petrified Root": 4.0}, "k": 0.0}];
+        const HAS_A=ITEMS.some(i=>i.m==="A");
+
+        const $=s=>root.querySelector(s);
+        function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+        function nk(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase();}
+        function fmtK(n){n=Number(n)||0;const s=n<0?"−":"";const a=Math.abs(n);let v;if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M";else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k";else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1});return s+v;}
+        function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1});}
+        function parseNum(x){const s=String(x==null?"":x).trim().replace(",",".");if(!s)return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,""));}
+
+        let MAT={};
+        async function loadMat(){MAT={};try{if(await adapter.exists(MAT_PATH)){const p=JSON.parse(await adapter.read(MAT_PATH));if(p&&p.prices)Object.keys(p.prices).forEach(k=>{MAT[k]=Number(p.prices[k].gold)||0;});}}catch(e){}}
+        function priceOf(nm){return MAT[nk(nm)]||0;}
+
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        const PROFLABEL="Encantamento", CGROUP="Encantamento";
+        const CONC_DEF0={"Poção":20,"Phial":35,"Flask":50,"Gema":40,"Encantamento":40,"Inscrição":35,"Ferraria":70,"Engenharia":55};
+        let CONC={def:Object.assign({},CONC_DEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CONC_DEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CONC_DEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CONC_DEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+        function concKeyOf(name){return PROFLABEL+"|"+nk(name);}
+        function concOf(name){const k=concKeyOf(name);if(CONC.item[k]!=null)return Number(CONC.item[k])||0;return Number(CONC.def[CGROUP]||0)||0;}
+
+        function freshState(){return {res:META.res,mc:META.mc,cut:5,ah:{},sort:"profit"};}
+        async function loadState(){try{if(await adapter.exists(DATA_PATH)){const p=JSON.parse(await adapter.read(DATA_PATH));const s=freshState();if(typeof p.res==="number")s.res=p.res;if(typeof p.mc==="number")s.mc=p.mc;if(typeof p.cut==="number")s.cut=p.cut;if(p.ah&&typeof p.ah==="object")s.ah=p.ah;if(["profit","roi","cost","ah","name"].includes(p.sort))s.sort=p.sort;return s;}}catch(e){}return freshState();}
+        let saving=false,pending=false;
+        async function saveState(){if(saving){pending=true;return;}saving=true;try{await adapter.write(DATA_PATH,JSON.stringify(S));}catch(e){}saving=false;if(pending){pending=false;saveState();}}
+        let S=await loadState();
+        await loadMat();
+        await loadConc();
+
+        function calc(it){
+          let miss=[],c=it.k;
+          for(const m in it.r){const p=priceOf(m);if(p<=0)miss.push(m);c+=it.r[m]*p;}
+          const cost=c*(1-(S.res/100)*META.resF);
+          const ahOv=S.ah[nk(it.n)],ahImp=priceOf(it.a),ah=(ahOv!=null)?ahOv:ahImp,fromImp=(ahOv==null&&ahImp>0);
+          const cut=1-S.cut/100; let value,profit;
+          if(it.m==="A"){const mult=1+(S.mc/100)*it.mb;value=ah*it.y*mult*cut;profit=value-cost;}
+          else{value=cut>0?cost/cut:0;profit=ah-value;}
+          const roi=cost>0?profit/cost*100:0;
+          const conc=concOf(it.n); const lconc=conc>0?profit/conc:null;
+          return {n:it.n,a:it.a,m:it.m,cost,ah,fromImp,value,profit,roi,conc,lconc,miss,nr:(Object.keys(it.r).length===0),noAh:(ah<=0),
+                  recipe:Object.keys(it.r).map(k=>(Math.round(it.r[k]*100)/100)+"× "+k).join(" + ")};
+        }
+        function rows(){return ITEMS.map(calc);}
+
+        root.innerHTML=`<style>
+        .enc-wrap{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .enc-wrap *{box-sizing:border-box}
+        .enc-wrap .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .enc-wrap h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .enc-wrap .params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+        .enc-wrap .param{display:flex;flex-direction:column;gap:3px}
+        .enc-wrap .param label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+        .enc-wrap .param input{width:88px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px}
+        .enc-wrap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+        .enc-wrap .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:12px;text-align:center}
+        .enc-wrap .stat .n{font-family:Georgia,serif;font-size:18px;font-weight:bold;color:var(--gold);line-height:1.15}
+        .enc-wrap .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .enc-wrap .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .enc-wrap .toolbar input{flex:1;min-width:150px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .enc-wrap .tw{width:100%;overflow-x:auto}
+        .enc-wrap table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .enc-wrap th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        .enc-wrap th:first-child,.enc-wrap td:first-child{text-align:left}
+        .enc-wrap th.sorted{color:var(--gold)}
+        .enc-wrap td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .enc-wrap td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .enc-wrap .imp{font-size:9px;color:var(--cyan);margin-left:5px}
+        .enc-wrap input.cell{width:64px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .enc-wrap input.cell:focus{outline:none;border-color:var(--gold)}
+        .enc-wrap input.cc{width:46px}
+        .enc-wrap input.cc.ov{border-color:var(--cyan)}
+        .enc-wrap .pos{color:var(--green)} .enc-wrap .neg{color:var(--red)}
+        .enc-wrap .pf{font-weight:700}
+        .enc-wrap .warn{color:var(--red);font-size:9px;margin-left:5px;cursor:help}
+        .enc-wrap .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .enc-wrap .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
+        .enc-wrap .toast.show{opacity:1}
+        .enc-wrap button{cursor:pointer;border:none;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#0b0f18;background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .enc-wrap button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        @media (max-width:620px){.enc-wrap .stats{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="enc-wrap">
+          <div class="card" style="margin-bottom:18px">
+            <h2 class="mt"><span>⚙️ Parâmetros</span><button class="ghost" id="enc-refresh">↻ atualizar preços (Materiais)</button></h2>
+            <div class="params">
+              <div class="param"><label>Resourcefulness %</label><input type="number" id="enc-res" step="0.1"></div>
+              <div class="param" id="enc-mcwrap"><label>Multicraft %</label><input type="number" id="enc-mc" step="0.1"></div>
+              <div class="param"><label>Taxa de AH %</label><input type="number" id="enc-cut" step="0.5"></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted2)" id="enc-note"></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="enc-k1">—</div><div class="l">Maior lucro/item</div></div>
+            <div class="stat"><div class="n" id="enc-k2">—</div><div class="l">Maior ROI%</div></div>
+            <div class="stat"><div class="n" id="enc-k3">0</div><div class="l">Com preço AH</div></div>
+            <div class="stat"><div class="n" id="enc-k4">—</div><div class="l">Lucro/item médio</div></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>🧮 Crafts</span><button class="ghost" id="enc-reset">padrão</button></h2>
+            <div class="toolbar"><input type="text" id="enc-search" placeholder="🔎 Buscar craft…"></div>
+            <div class="tw"><table><thead><tr>
+              <th data-s="name">Craft</th><th data-s="cost">Custo</th><th>Breakeven</th><th data-s="ah">Preço AH</th><th data-s="profit">Lucro/item</th><th data-s="roi">ROI%</th><th>Conc</th><th data-s="lconc">Lucro/Conc</th>
+            </tr></thead><tbody id="enc-body"></tbody></table></div>
+          </div>
+        </div>`;
+
+        let toastT=null;
+        function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";root.querySelector(".enc-wrap").appendChild(t);}t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2000);}
+
+        let searchTerm="";
+        const SORTMAP={profit:"profit",roi:"roi",cost:"cost",ah:"ah",name:"n",lconc:"lconc"};
+        function render(){
+          if($("#enc-res")&&document.activeElement!==$("#enc-res"))$("#enc-res").value=S.res;
+          if($("#enc-mc")&&document.activeElement!==$("#enc-mc"))$("#enc-mc").value=S.mc;
+          if($("#enc-cut")&&document.activeElement!==$("#enc-cut"))$("#enc-cut").value=S.cut;
+          if($("#enc-mcwrap"))$("#enc-mcwrap").style.display=HAS_A?"":"none";
+          $("#enc-note").innerHTML = HAS_A
+            ? "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Valor/craft = AH × rendimento × (1 + mc%×base) × (1 − taxa)."
+            : "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Lucro = preço AH − custo/(1 − taxa).";
+          let rs=rows(); const all=rs.slice();
+          if(searchTerm){const t=nk(searchTerm);rs=rs.filter(r=>nk(r.n).includes(t));}
+          const sk=SORTMAP[S.sort]||"profit";
+          if(sk==="lconc")rs=rs.filter(r=>r.lconc!=null && !r.noAh && !r.nr);
+          rs.sort((a,b)=>{if(sk==="n")return String(a.n).localeCompare(String(b.n));return (b[sk]||0)-(a[sk]||0);});
+          const withAh=all.filter(r=>!r.noAh && !r.nr);
+          const bp=withAh.slice().sort((a,b)=>b.profit-a.profit)[0], br=withAh.slice().sort((a,b)=>b.roi-a.roi)[0];
+          const avg=withAh.length?withAh.reduce((a,r)=>a+r.profit,0)/withAh.length:0;
+          $("#enc-k1").innerHTML=bp?('<span style="font-size:12px">'+esc(bp.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtK(bp.profit)):"—";
+          $("#enc-k2").innerHTML=br?('<span style="font-size:12px">'+esc(br.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtN(br.roi)+"%"):"—";
+          $("#enc-k3").textContent=withAh.length+"/"+all.length;
+          $("#enc-k4").textContent=withAh.length?fmtK(avg):"—";
+          root.querySelectorAll("th[data-s]").forEach(th=>th.classList.toggle("sorted",th.dataset.s===S.sort));
+          const body=$("#enc-body");
+          body.innerHTML=rs.map(r=>{const key=nk(r.n);
+            const warn=r.nr?'<span class="warn" title="Receita não detectada no .xlsx — custo pode estar incompleto">⚠</span>':(r.miss.length?'<span class="warn" title="Sem preço: '+esc(r.miss.join(", "))+'">⚠</span>':'');
+            return '<tr data-k="'+key+'">'+
+              '<td class="name" title="'+esc(r.recipe)+'">'+esc(r.n.replace(/ Tier ([12])$/," T$1"))+warn+'</td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+(r.noAh&&r.m==="A"?'<span style="color:var(--muted2)">—</span>':fmtK(r.value))+'</td>'+
+              '<td><input class="cell" data-ah="'+key+'" value="'+(r.ah>0?fmtN(r.ah):"")+'" placeholder="—">'+(r.fromImp?'<span class="imp">⟳</span>':'')+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.profit))+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtN(r.roi)+"%")+'</td>'+
+              '<td><input class="cell cc'+(CONC.item[concKeyOf(r.n)]!=null?" ov":"")+'" data-cc="'+esc(concKeyOf(r.n))+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[CGROUP]||"—")+'" title="Concentração deste craft (vazio = padrão do tipo '+esc(CGROUP)+')"></td>'+
+              '<td class="pf '+((r.lconc==null)?"":(r.lconc>=0?"pos":"neg"))+'">'+(r.noAh||r.lconc==null?'<span style="color:var(--muted2)">—</span>':fmtK(r.lconc))+'</td></tr>';
+          }).join("");
+          body.querySelectorAll("input[data-ah]").forEach(inp=>inp.onchange=async()=>{const key=inp.dataset.ah,vv=parseNum(inp.value),imp=MAT[key]||0;if(isNaN(vv)){delete S.ah[key];}else if(imp>0&&Math.abs(vv-imp)<0.05){delete S.ah[key];}else{S.ah[key]=vv;}await saveState();render();});
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{const k=inp.dataset.cc,vv=parseNum(inp.value);if(isNaN(vv)||inp.value.trim()===""){delete CONC.item[k];}else{CONC.item[k]=vv;}await saveConc();render();});
+        }
+
+        async function setP(f,v){if(isNaN(v))return;S[f]=v;await saveState();render();}
+        $("#enc-res").onchange=e=>setP("res",parseNum(e.target.value));
+        $("#enc-mc").onchange=e=>setP("mc",parseNum(e.target.value));
+        $("#enc-cut").onchange=e=>setP("cut",parseNum(e.target.value));
+        root.querySelectorAll("th[data-s]").forEach(th=>th.onclick=async()=>{S.sort=th.dataset.s;await saveState();render();});
+        $("#enc-search").oninput=e=>{searchTerm=e.target.value;render();};
+        $("#enc-refresh").onclick=async()=>{await loadMat();render();};
+        $("#enc-reset").onclick=async()=>{S.res=META.res;S.mc=META.mc;S.cut=5;await saveState();render();};
+        if(window.__pf__encantamento){window.removeEventListener("focus",window.__pf__encantamento);}
+        window.__pf__encantamento=async()=>{const el=$("#enc-body");if(!el||!document.body.contains(el))return;if(root.querySelector("input:focus"))return;try{S=await loadState();await loadMat();await loadConc();}catch(e){}render();};
+        window.addEventListener("focus",window.__pf__encantamento);
+        render();
+      }
+
+      /* ============ 6. Inscrição ============ */
+      async function run_inscricao(root){
+        const folder=dv.current().file.folder;
+        const DATA_PATH=(folder?folder+"/":"")+"MIDNIGHT_Inscricao_Data.json";
+        const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const adapter=app.vault.adapter;
+        const META={"resF": 0.45, "res": 17.7, "mc": 31.0};
+        const ITEMS=[{"n": "Munsell Ink Tier 2", "a": "Munsell Ink Tier 2", "m": "A", "y": 2.0, "mb": 2.521, "r": {}, "k": 1.0785}, {"n": "Sienna Ink Tier 2", "a": "Sienna Ink Tier 2", "m": "A", "y": 2.0, "mb": 2.521, "r": {}, "k": 1.0785}, {"n": "Soul Cipher Tier 2", "a": "Soul Cipher Tier 2", "m": "A", "y": 1.0, "mb": 2.519, "r": {"Mote of Pure Void": 1.0, "Mote of Light": 1.0, "Duskshrouded Stone Tier 1": 1.0}, "k": 0.0}, {"n": "Codified Azeroot Tier 2", "a": "Codified Azeroot Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Primal Energy": 1.0, "Mote of Wild Magic": 1.0, "Azeroot Tier 1": 8.0}, "k": 0.0}, {"n": "Darkmoon Sigil: Blood Tier 2", "a": "Darkmoon Sigil: Blood Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Light": 10.0}, "k": 0.3595}, {"n": "Darkmoon Sigil: Hunt Tier 2", "a": "Darkmoon Sigil: Hunt Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Wild Magic": 10.0}, "k": 0.3595}, {"n": "Darkmoon Sigil: Rot Tier 2", "a": "Darkmoon Sigil: Rot Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Primal Energy": 10.0}, "k": 0.3595}, {"n": "Darkmoon Sigil: Void Tier 2", "a": "Darkmoon Sigil: Void Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Pure Void": 10.0}, "k": 0.3595}, {"n": "Vantus Rune: Radiant Tier 2", "a": "Vantus Rune: Radiant Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Petrified Root": 2.0}, "k": 0.5745}, {"n": "Contract: The Amani Tribe Tier 2", "a": "Contract: The Amani Tribe Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Light": 3.0}, "k": 0.215}, {"n": "Contract: The Silvermoon Court Tier 2", "a": "Contract: The Silvermoon Court Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Wild Magic": 3.0}, "k": 0.215}, {"n": "Contract: The Hara'ti Tier 2", "a": "Contract: The Hara'ti Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Primal Energy": 3.0}, "k": 0.215}, {"n": "Contract: The Singularity Tier 2", "a": "Contract: The Singularity Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {"Mote of Pure Void": 3.0}, "k": 0.215}, {"n": "Thalassian Missive of Perception Tier 2", "a": "Thalassian Missive of Perception Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of Multicraft Tier 2", "a": "Thalassian Missive of Multicraft Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of Ingenuity Tier 2", "a": "Thalassian Missive of Ingenuity Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of Resourcefulness Tier 2", "a": "Thalassian Missive of Resourcefulness Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of Deftness Tier 2", "a": "Thalassian Missive of Deftness Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of Crafting Speed Tier 2", "a": "Thalassian Missive of Crafting Speed Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of Finesse Tier 2", "a": "Thalassian Missive of Finesse Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of the Aurora Tier 2", "a": "Thalassian Missive of the Aurora Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of the Feverflare Tier 2", "a": "Thalassian Missive of the Feverflare Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of the Fireflash Tier 2", "a": "Thalassian Missive of the Fireflash Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of the Harmonious Tier 2", "a": "Thalassian Missive of the Harmonious Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of the Peerless Tier 2", "a": "Thalassian Missive of the Peerless Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}, {"n": "Thalassian Missive of the Quickblade Tier 2", "a": "Thalassian Missive of the Quickblade Tier 2", "m": "A", "y": 1.0, "mb": 2.641, "r": {}, "k": 0.215}];
+        const HAS_A=ITEMS.some(i=>i.m==="A");
+
+        const $=s=>root.querySelector(s);
+        function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+        function nk(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase();}
+        function fmtK(n){n=Number(n)||0;const s=n<0?"−":"";const a=Math.abs(n);let v;if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M";else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k";else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1});return s+v;}
+        function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1});}
+        function parseNum(x){const s=String(x==null?"":x).trim().replace(",",".");if(!s)return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,""));}
+
+        let MAT={};
+        async function loadMat(){MAT={};try{if(await adapter.exists(MAT_PATH)){const p=JSON.parse(await adapter.read(MAT_PATH));if(p&&p.prices)Object.keys(p.prices).forEach(k=>{MAT[k]=Number(p.prices[k].gold)||0;});}}catch(e){}}
+        function priceOf(nm){return MAT[nk(nm)]||0;}
+
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        const PROFLABEL="Inscrição", CGROUP="Inscrição";
+        const CONC_DEF0={"Poção":20,"Phial":35,"Flask":50,"Gema":40,"Encantamento":40,"Inscrição":35,"Ferraria":70,"Engenharia":55};
+        let CONC={def:Object.assign({},CONC_DEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CONC_DEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CONC_DEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CONC_DEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+        function concKeyOf(name){return PROFLABEL+"|"+nk(name);}
+        function concOf(name){const k=concKeyOf(name);if(CONC.item[k]!=null)return Number(CONC.item[k])||0;return Number(CONC.def[CGROUP]||0)||0;}
+
+        function freshState(){return {res:META.res,mc:META.mc,cut:5,ah:{},sort:"profit"};}
+        async function loadState(){try{if(await adapter.exists(DATA_PATH)){const p=JSON.parse(await adapter.read(DATA_PATH));const s=freshState();if(typeof p.res==="number")s.res=p.res;if(typeof p.mc==="number")s.mc=p.mc;if(typeof p.cut==="number")s.cut=p.cut;if(p.ah&&typeof p.ah==="object")s.ah=p.ah;if(["profit","roi","cost","ah","name"].includes(p.sort))s.sort=p.sort;return s;}}catch(e){}return freshState();}
+        let saving=false,pending=false;
+        async function saveState(){if(saving){pending=true;return;}saving=true;try{await adapter.write(DATA_PATH,JSON.stringify(S));}catch(e){}saving=false;if(pending){pending=false;saveState();}}
+        let S=await loadState();
+        await loadMat();
+        await loadConc();
+
+        function calc(it){
+          let miss=[],c=it.k;
+          for(const m in it.r){const p=priceOf(m);if(p<=0)miss.push(m);c+=it.r[m]*p;}
+          const cost=c*(1-(S.res/100)*META.resF);
+          const ahOv=S.ah[nk(it.n)],ahImp=priceOf(it.a),ah=(ahOv!=null)?ahOv:ahImp,fromImp=(ahOv==null&&ahImp>0);
+          const cut=1-S.cut/100; let value,profit;
+          if(it.m==="A"){const mult=1+(S.mc/100)*it.mb;value=ah*it.y*mult*cut;profit=value-cost;}
+          else{value=cut>0?cost/cut:0;profit=ah-value;}
+          const roi=cost>0?profit/cost*100:0;
+          const conc=concOf(it.n); const lconc=conc>0?profit/conc:null;
+          return {n:it.n,a:it.a,m:it.m,cost,ah,fromImp,value,profit,roi,conc,lconc,miss,nr:(Object.keys(it.r).length===0),noAh:(ah<=0),
+                  recipe:Object.keys(it.r).map(k=>(Math.round(it.r[k]*100)/100)+"× "+k).join(" + ")};
+        }
+        function rows(){return ITEMS.map(calc);}
+
+        root.innerHTML=`<style>
+        .ins-wrap{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .ins-wrap *{box-sizing:border-box}
+        .ins-wrap .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .ins-wrap h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .ins-wrap .params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+        .ins-wrap .param{display:flex;flex-direction:column;gap:3px}
+        .ins-wrap .param label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+        .ins-wrap .param input{width:88px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px}
+        .ins-wrap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+        .ins-wrap .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:12px;text-align:center}
+        .ins-wrap .stat .n{font-family:Georgia,serif;font-size:18px;font-weight:bold;color:var(--gold);line-height:1.15}
+        .ins-wrap .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .ins-wrap .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .ins-wrap .toolbar input{flex:1;min-width:150px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .ins-wrap .tw{width:100%;overflow-x:auto}
+        .ins-wrap table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .ins-wrap th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        .ins-wrap th:first-child,.ins-wrap td:first-child{text-align:left}
+        .ins-wrap th.sorted{color:var(--gold)}
+        .ins-wrap td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .ins-wrap td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .ins-wrap .imp{font-size:9px;color:var(--cyan);margin-left:5px}
+        .ins-wrap input.cell{width:64px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .ins-wrap input.cell:focus{outline:none;border-color:var(--gold)}
+        .ins-wrap input.cc{width:46px}
+        .ins-wrap input.cc.ov{border-color:var(--cyan)}
+        .ins-wrap .pos{color:var(--green)} .ins-wrap .neg{color:var(--red)}
+        .ins-wrap .pf{font-weight:700}
+        .ins-wrap .warn{color:var(--red);font-size:9px;margin-left:5px;cursor:help}
+        .ins-wrap .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .ins-wrap .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
+        .ins-wrap .toast.show{opacity:1}
+        .ins-wrap button{cursor:pointer;border:none;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#0b0f18;background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .ins-wrap button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        @media (max-width:620px){.ins-wrap .stats{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="ins-wrap">
+          <div class="card" style="margin-bottom:18px">
+            <h2 class="mt"><span>⚙️ Parâmetros</span><button class="ghost" id="ins-refresh">↻ atualizar preços (Materiais)</button></h2>
+            <div class="params">
+              <div class="param"><label>Resourcefulness %</label><input type="number" id="ins-res" step="0.1"></div>
+              <div class="param" id="ins-mcwrap"><label>Multicraft %</label><input type="number" id="ins-mc" step="0.1"></div>
+              <div class="param"><label>Taxa de AH %</label><input type="number" id="ins-cut" step="0.5"></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted2)" id="ins-note"></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="ins-k1">—</div><div class="l">Maior lucro/item</div></div>
+            <div class="stat"><div class="n" id="ins-k2">—</div><div class="l">Maior ROI%</div></div>
+            <div class="stat"><div class="n" id="ins-k3">0</div><div class="l">Com preço AH</div></div>
+            <div class="stat"><div class="n" id="ins-k4">—</div><div class="l">Lucro/item médio</div></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>🧮 Crafts</span><button class="ghost" id="ins-reset">padrão</button></h2>
+            <div class="toolbar"><input type="text" id="ins-search" placeholder="🔎 Buscar craft…"></div>
+            <div class="tw"><table><thead><tr>
+              <th data-s="name">Craft</th><th data-s="cost">Custo</th><th>Valor/craft</th><th data-s="ah">Preço AH</th><th data-s="profit">Lucro/item</th><th data-s="roi">ROI%</th><th>Conc</th><th data-s="lconc">Lucro/Conc</th>
+            </tr></thead><tbody id="ins-body"></tbody></table></div>
+          </div>
+        </div>`;
+
+        let toastT=null;
+        function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";root.querySelector(".ins-wrap").appendChild(t);}t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2000);}
+
+        let searchTerm="";
+        const SORTMAP={profit:"profit",roi:"roi",cost:"cost",ah:"ah",name:"n",lconc:"lconc"};
+        function render(){
+          if($("#ins-res")&&document.activeElement!==$("#ins-res"))$("#ins-res").value=S.res;
+          if($("#ins-mc")&&document.activeElement!==$("#ins-mc"))$("#ins-mc").value=S.mc;
+          if($("#ins-cut")&&document.activeElement!==$("#ins-cut"))$("#ins-cut").value=S.cut;
+          if($("#ins-mcwrap"))$("#ins-mcwrap").style.display=HAS_A?"":"none";
+          $("#ins-note").innerHTML = HAS_A
+            ? "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Valor/craft = AH × rendimento × (1 + mc%×base) × (1 − taxa)."
+            : "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Lucro = preço AH − custo/(1 − taxa).";
+          let rs=rows(); const all=rs.slice();
+          if(searchTerm){const t=nk(searchTerm);rs=rs.filter(r=>nk(r.n).includes(t));}
+          const sk=SORTMAP[S.sort]||"profit";
+          if(sk==="lconc")rs=rs.filter(r=>r.lconc!=null && !r.noAh && !r.nr);
+          rs.sort((a,b)=>{if(sk==="n")return String(a.n).localeCompare(String(b.n));return (b[sk]||0)-(a[sk]||0);});
+          const withAh=all.filter(r=>!r.noAh && !r.nr);
+          const bp=withAh.slice().sort((a,b)=>b.profit-a.profit)[0], br=withAh.slice().sort((a,b)=>b.roi-a.roi)[0];
+          const avg=withAh.length?withAh.reduce((a,r)=>a+r.profit,0)/withAh.length:0;
+          $("#ins-k1").innerHTML=bp?('<span style="font-size:12px">'+esc(bp.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtK(bp.profit)):"—";
+          $("#ins-k2").innerHTML=br?('<span style="font-size:12px">'+esc(br.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtN(br.roi)+"%"):"—";
+          $("#ins-k3").textContent=withAh.length+"/"+all.length;
+          $("#ins-k4").textContent=withAh.length?fmtK(avg):"—";
+          root.querySelectorAll("th[data-s]").forEach(th=>th.classList.toggle("sorted",th.dataset.s===S.sort));
+          const body=$("#ins-body");
+          body.innerHTML=rs.map(r=>{const key=nk(r.n);
+            const warn=r.nr?'<span class="warn" title="Receita não detectada no .xlsx — custo pode estar incompleto">⚠</span>':(r.miss.length?'<span class="warn" title="Sem preço: '+esc(r.miss.join(", "))+'">⚠</span>':'');
+            return '<tr data-k="'+key+'">'+
+              '<td class="name" title="'+esc(r.recipe)+'">'+esc(r.n.replace(/ Tier ([12])$/," T$1"))+warn+'</td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+(r.noAh&&r.m==="A"?'<span style="color:var(--muted2)">—</span>':fmtK(r.value))+'</td>'+
+              '<td><input class="cell" data-ah="'+key+'" value="'+(r.ah>0?fmtN(r.ah):"")+'" placeholder="—">'+(r.fromImp?'<span class="imp">⟳</span>':'')+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.profit))+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtN(r.roi)+"%")+'</td>'+
+              '<td><input class="cell cc'+(CONC.item[concKeyOf(r.n)]!=null?" ov":"")+'" data-cc="'+esc(concKeyOf(r.n))+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[CGROUP]||"—")+'" title="Concentração deste craft (vazio = padrão do tipo '+esc(CGROUP)+')"></td>'+
+              '<td class="pf '+((r.lconc==null)?"":(r.lconc>=0?"pos":"neg"))+'">'+(r.noAh||r.lconc==null?'<span style="color:var(--muted2)">—</span>':fmtK(r.lconc))+'</td></tr>';
+          }).join("");
+          body.querySelectorAll("input[data-ah]").forEach(inp=>inp.onchange=async()=>{const key=inp.dataset.ah,vv=parseNum(inp.value),imp=MAT[key]||0;if(isNaN(vv)){delete S.ah[key];}else if(imp>0&&Math.abs(vv-imp)<0.05){delete S.ah[key];}else{S.ah[key]=vv;}await saveState();render();});
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{const k=inp.dataset.cc,vv=parseNum(inp.value);if(isNaN(vv)||inp.value.trim()===""){delete CONC.item[k];}else{CONC.item[k]=vv;}await saveConc();render();});
+        }
+
+        async function setP(f,v){if(isNaN(v))return;S[f]=v;await saveState();render();}
+        $("#ins-res").onchange=e=>setP("res",parseNum(e.target.value));
+        $("#ins-mc").onchange=e=>setP("mc",parseNum(e.target.value));
+        $("#ins-cut").onchange=e=>setP("cut",parseNum(e.target.value));
+        root.querySelectorAll("th[data-s]").forEach(th=>th.onclick=async()=>{S.sort=th.dataset.s;await saveState();render();});
+        $("#ins-search").oninput=e=>{searchTerm=e.target.value;render();};
+        $("#ins-refresh").onclick=async()=>{await loadMat();render();};
+        $("#ins-reset").onclick=async()=>{S.res=META.res;S.mc=META.mc;S.cut=5;await saveState();render();};
+        if(window.__pf__inscricao){window.removeEventListener("focus",window.__pf__inscricao);}
+        window.__pf__inscricao=async()=>{const el=$("#ins-body");if(!el||!document.body.contains(el))return;if(root.querySelector("input:focus"))return;try{S=await loadState();await loadMat();await loadConc();}catch(e){}render();};
+        window.addEventListener("focus",window.__pf__inscricao);
+        render();
+      }
+
+     /* ============ MIDNIGHT · Ferraria ============ */
+      async function run_ferraria(root){
+        const folder=dv.current().file.folder;
+        const DATA_PATH=(folder?folder+"/":"")+"MIDNIGHT_Ferraria_Data.json";
+        const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const adapter=app.vault.adapter;
+        const META={"resF": 0.3, "res": 20.6, "mc": 33.0};
+        const ITEMS=[{"n": "Refulgent Copper Ingot Tier 1", "a": "Refulgent Copper Ingot Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 3.34448}, "k": 0.4013}, {"n": "Refulgent Copper Ingot Tier 2", "a": "Refulgent Copper Ingot Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.4013}, {"n": "Gloaming Alloy Tier 1", "a": "Gloaming Alloy Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.29657, "Umbral Tin Ore Tier 1": 4.01338}, "k": 0.9161}, {"n": "Gloaming Alloy Tier 2", "a": "Gloaming Alloy Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5583}, {"n": "Sterling Alloy Tier 1", "a": "Sterling Alloy Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.29657, "Brilliant Silver Ore Tier 1": 4.01338}, "k": 0.9161}, {"n": "Sterling Alloy Tier 2", "a": "Sterling Alloy Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.9161}, {"n": "Refulgent Razorstone Tier 1", "a": "Refulgent Razorstone Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.59348, "Duskshrouded Stone Tier 1": 0.70044, "Petrified Root": 0.35022}, "k": 1.5792}, {"n": "Refulgent Razorstone Tier 2", "a": "Refulgent Razorstone Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5792}, {"n": "Refulgent Weightstone Tier 1", "a": "Refulgent Weightstone Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.59348, "Duskshrouded Stone Tier 1": 0.70044, "Petrified Root": 0.35022}, "k": 1.5792}, {"n": "Refulgent Weightstone Tier 2", "a": "Refulgent Weightstone Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5792}, {"n": "Refulgent Whetstone Tier 1", "a": "Refulgent Whetstone Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 6.59348, "Duskshrouded Stone Tier 1": 0.70044, "Petrified Root": 0.35022}, "k": 1.5792}, {"n": "Refulgent Whetstone Tier 2", "a": "Refulgent Whetstone Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 1.5792}, {"n": "Refulgent Repair Hammer", "a": "Refulgent Repair Hammer", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 2.09886, "Duskshrouded Stone Tier 1": 0.6689}, "k": 0.4525}, {"n": "Thalassian Skeleton Key", "a": "Thalassian Skeleton Key", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 4.01338, "Brilliant Silver Ore Tier 1": 2.00669}, "k": 0.0}];
+        const HAS_A=ITEMS.some(i=>i.m==="A");
+
+        const $=s=>root.querySelector(s);
+        function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+        function nk(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase();}
+        function fmtK(n){n=Number(n)||0;const s=n<0?"−":"";const a=Math.abs(n);let v;if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M";else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k";else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1});return s+v;}
+        function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1});}
+        function parseNum(x){const s=String(x==null?"":x).trim().replace(",",".");if(!s)return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,""));}
+
+        let MAT={};
+        async function loadMat(){MAT={};try{if(await adapter.exists(MAT_PATH)){const p=JSON.parse(await adapter.read(MAT_PATH));if(p&&p.prices)Object.keys(p.prices).forEach(k=>{MAT[k]=Number(p.prices[k].gold)||0;});}}catch(e){console.log("mat err",e);}}
+        function priceOf(nm){return MAT[nk(nm)]||0;}
+
+        /* ---- Concentração (store compartilhado entre todas as abas) ---- */
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        const PROFLABEL="Ferraria", CGROUP="Ferraria";
+        const CONC_DEF0={"Poção":20,"Phial":35,"Flask":50,"Gema":40,"Encantamento":40,"Inscrição":35,"Ferraria":70,"Engenharia":55};
+        let CONC={def:Object.assign({},CONC_DEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CONC_DEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CONC_DEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CONC_DEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+        function concKeyOf(name){return PROFLABEL+"|"+nk(name);}
+        function concOf(name){const k=concKeyOf(name);if(CONC.item[k]!=null)return Number(CONC.item[k])||0;return Number(CONC.def[CGROUP]||0)||0;}
+
+        function freshState(){return {res:META.res,mc:META.mc,cut:5,ah:{},sort:"profit"};}
+        async function loadState(){try{if(await adapter.exists(DATA_PATH)){const p=JSON.parse(await adapter.read(DATA_PATH));const s=freshState();if(typeof p.res==="number")s.res=p.res;if(typeof p.mc==="number")s.mc=p.mc;if(typeof p.cut==="number")s.cut=p.cut;if(p.ah&&typeof p.ah==="object")s.ah=p.ah;if(["profit","roi","cost","ah","name"].includes(p.sort))s.sort=p.sort;return s;}}catch(e){console.log("load err",e);}return freshState();}
+        let saving=false,pending=false;
+        async function saveState(){if(saving){pending=true;return;}saving=true;try{await adapter.write(DATA_PATH,JSON.stringify(S));}catch(e){}saving=false;if(pending){pending=false;saveState();}}
+        let S=await loadState();
+        await loadMat();
+        await loadConc();
+
+        function calc(it){
+          let miss=[],c=it.k;
+          for(const m in it.r){const p=priceOf(m);if(p<=0)miss.push(m);c+=it.r[m]*p;}
+          const cost=c*(1-(S.res/100)*META.resF);
+          const ahOv=S.ah[nk(it.n)],ahImp=priceOf(it.a),ah=(ahOv!=null)?ahOv:ahImp,fromImp=(ahOv==null&&ahImp>0);
+          const cut=1-S.cut/100; let value,profit;
+          if(it.m==="A"){const mult=1+(S.mc/100)*it.mb;value=ah*it.y*mult*cut;profit=value-cost;}
+          else{value=cut>0?cost/cut:0;profit=ah-value;}
+          const roi=cost>0?profit/cost*100:0;
+          const conc=concOf(it.n); const lconc=conc>0?profit/conc:null;
+          return {n:it.n,a:it.a,m:it.m,cost,ah,fromImp,value,profit,roi,conc,lconc,miss,nr:(Object.keys(it.r).length===0),noAh:(ah<=0),
+                  recipe:Object.keys(it.r).map(k=>(Math.round(it.r[k]*100)/100)+"× "+k).join(" + ")};
+        }
+        function rows(){return ITEMS.map(calc);}
+
+        root.innerHTML=`
+        <style>
+        .fer-wrap{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .fer-wrap *{box-sizing:border-box}
+        .fer-wrap .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .fer-wrap h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .fer-wrap .params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+        .fer-wrap .param{display:flex;flex-direction:column;gap:3px}
+        .fer-wrap .param label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+        .fer-wrap .param input{width:88px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px}
+        .fer-wrap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+        .fer-wrap .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:12px;text-align:center}
+        .fer-wrap .stat .n{font-family:Georgia,serif;font-size:18px;font-weight:bold;color:var(--gold);line-height:1.15}
+        .fer-wrap .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .fer-wrap .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .fer-wrap .toolbar input{flex:1;min-width:150px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .fer-wrap .tw{width:100%;overflow-x:auto}
+        .fer-wrap table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .fer-wrap th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        .fer-wrap th:first-child,.fer-wrap td:first-child{text-align:left}
+        .fer-wrap th.sorted{color:var(--gold)}
+        .fer-wrap td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .fer-wrap td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .fer-wrap .imp{font-size:9px;color:var(--cyan);margin-left:5px}
+        .fer-wrap input.cell{width:64px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .fer-wrap input.cell:focus{outline:none;border-color:var(--gold)}
+        .fer-wrap input.cc{width:46px}
+        .fer-wrap input.cc.ov{border-color:var(--cyan)}
+        .fer-wrap .pos{color:var(--green)} .fer-wrap .neg{color:var(--red)}
+        .fer-wrap .pf{font-weight:700}
+        .fer-wrap .warn{color:var(--red);font-size:9px;margin-left:5px;cursor:help}
+        .fer-wrap .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .fer-wrap .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
+        .fer-wrap .toast.show{opacity:1}
+        .fer-wrap button{cursor:pointer;border:none;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#0b0f18;background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .fer-wrap button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        @media (max-width:620px){.fer-wrap .stats{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="fer-wrap">
+          <div class="card" style="margin-bottom:18px">
+            <h2 class="mt"><span>⚙️ Parâmetros</span><button class="ghost" id="fer-refresh">↻ atualizar preços (Materiais)</button></h2>
+            <div class="params">
+              <div class="param"><label>Resourcefulness %</label><input type="number" id="fer-res" step="0.1"></div>
+              <div class="param" id="fer-mcwrap"><label>Multicraft %</label><input type="number" id="fer-mc" step="0.1"></div>
+              <div class="param"><label>Taxa de AH %</label><input type="number" id="fer-cut" step="0.5"></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted2)" id="fer-note"></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="fer-k1">—</div><div class="l">Maior lucro/item</div></div>
+            <div class="stat"><div class="n" id="fer-k2">—</div><div class="l">Maior ROI%</div></div>
+            <div class="stat"><div class="n" id="fer-k3">0</div><div class="l">Com preço AH</div></div>
+            <div class="stat"><div class="n" id="fer-k4">—</div><div class="l">Lucro/item médio</div></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>🧮 Crafts</span><button class="ghost" id="fer-reset">padrão</button></h2>
+            <div class="toolbar"><input type="text" id="fer-search" placeholder="🔎 Buscar craft…"></div>
+            <div class="tw"><table><thead><tr>
+              <th data-s="name">Craft</th><th data-s="cost">Custo</th><th>Breakeven</th><th data-s="ah">Preço AH</th><th data-s="profit">Lucro/item</th><th data-s="roi">ROI%</th><th>Conc</th><th data-s="lconc">Lucro/Conc</th>
+            </tr></thead><tbody id="fer-body"></tbody></table></div>
+          </div>
+          <div class="ftr">Preço AH ⟳ = do painel Materiais (editável) · ⚠ = falta preço de material · receitas/fórmulas da Kaychak · dados em <b>MIDNIGHT_Ferraria_Data.json</b></div>
+        </div>`;
+
+        let toastT=null;
+        function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";root.querySelector(".fer-wrap").appendChild(t);}t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2000);}
+
+        let searchTerm="";
+        const SORTMAP={profit:"profit",roi:"roi",cost:"cost",ah:"ah",name:"n",lconc:"lconc"};
+        function render(){
+          if($("#fer-res")&&document.activeElement!==$("#fer-res"))$("#fer-res").value=S.res;
+          if($("#fer-mc")&&document.activeElement!==$("#fer-mc"))$("#fer-mc").value=S.mc;
+          if($("#fer-cut")&&document.activeElement!==$("#fer-cut"))$("#fer-cut").value=S.cut;
+          if($("#fer-mcwrap"))$("#fer-mcwrap").style.display=HAS_A?"":"none";
+          $("#fer-note").innerHTML = HAS_A
+            ? "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Valor/craft = AH × rendimento × (1 + mc%×base) × (1 − taxa)."
+            : "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Lucro = preço AH − custo/(1 − taxa). (multicraft não entra no valor desta profissão)";
+          let rs=rows(); const all=rs.slice();
+          if(searchTerm){const t=nk(searchTerm);rs=rs.filter(r=>nk(r.n).includes(t));}
+          const sk=SORTMAP[S.sort]||"profit";
+          if(sk==="lconc")rs=rs.filter(r=>r.lconc!=null && !r.noAh && !r.nr);
+          rs.sort((a,b)=>{if(sk==="n")return String(a.n).localeCompare(String(b.n));return (b[sk]||0)-(a[sk]||0);});
+          const withAh=all.filter(r=>!r.noAh && !r.nr);
+          const bp=withAh.slice().sort((a,b)=>b.profit-a.profit)[0], br=withAh.slice().sort((a,b)=>b.roi-a.roi)[0];
+          const avg=withAh.length?withAh.reduce((a,r)=>a+r.profit,0)/withAh.length:0;
+          $("#fer-k1").innerHTML=bp?('<span style="font-size:12px">'+esc(bp.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtK(bp.profit)):"—";
+          $("#fer-k2").innerHTML=br?('<span style="font-size:12px">'+esc(br.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtN(br.roi)+"%"):"—";
+          $("#fer-k3").textContent=withAh.length+"/"+all.length;
+          $("#fer-k4").textContent=withAh.length?fmtK(avg):"—";
+          root.querySelectorAll("th[data-s]").forEach(th=>th.classList.toggle("sorted",th.dataset.s===S.sort));
+          const body=$("#fer-body");
+          body.innerHTML=rs.map(r=>{const key=nk(r.n);
+            const warn=r.nr?'<span class="warn" title="Receita não detectada no .xlsx — custo pode estar incompleto">⚠</span>':(r.miss.length?'<span class="warn" title="Sem preço: '+esc(r.miss.join(", "))+'">⚠</span>':'');
+            return '<tr data-k="'+key+'">'+
+              '<td class="name" title="'+esc(r.recipe)+'">'+esc(r.n.replace(/ Tier ([12])$/," T$1"))+warn+'</td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+(r.noAh&&r.m==="A"?'<span style="color:var(--muted2)">—</span>':fmtK(r.value))+'</td>'+
+              '<td><input class="cell" data-ah="'+key+'" value="'+(r.ah>0?fmtN(r.ah):"")+'" placeholder="—">'+(r.fromImp?'<span class="imp">⟳</span>':'')+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.profit))+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtN(r.roi)+"%")+'</td>'+
+              '<td><input class="cell cc'+(CONC.item[concKeyOf(r.n)]!=null?" ov":"")+'" data-cc="'+esc(concKeyOf(r.n))+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[CGROUP]||"—")+'" title="Concentração deste craft (vazio = padrão do tipo '+esc(CGROUP)+')"></td>'+
+              '<td class="pf '+((r.lconc==null)?"":(r.lconc>=0?"pos":"neg"))+'">'+(r.noAh||r.lconc==null?'<span style="color:var(--muted2)">—</span>':fmtK(r.lconc))+'</td></tr>';
+          }).join("");
+          body.querySelectorAll("input[data-ah]").forEach(inp=>inp.onchange=async()=>{const key=inp.dataset.ah,vv=parseNum(inp.value),imp=MAT[key]||0;if(isNaN(vv)){delete S.ah[key];}else if(imp>0&&Math.abs(vv-imp)<0.05){delete S.ah[key];}else{S.ah[key]=vv;}await saveState();render();});
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{const k=inp.dataset.cc,vv=parseNum(inp.value);if(isNaN(vv)||inp.value.trim()===""){delete CONC.item[k];}else{CONC.item[k]=vv;}await saveConc();render();});
+        }
+
+        async function setP(f,v){if(isNaN(v))return;S[f]=v;await saveState();render();}
+        $("#fer-res").onchange=e=>setP("res",parseNum(e.target.value));
+        $("#fer-mc").onchange=e=>setP("mc",parseNum(e.target.value));
+        $("#fer-cut").onchange=e=>setP("cut",parseNum(e.target.value));
+        root.querySelectorAll("th[data-s]").forEach(th=>th.onclick=async()=>{S.sort=th.dataset.s;await saveState();render();});
+        $("#fer-search").oninput=e=>{searchTerm=e.target.value;render();};
+        $("#fer-refresh").onclick=async()=>{await loadMat();render();toast("Preços atualizados");};
+        $("#fer-reset").onclick=async()=>{S.res=META.res;S.mc=META.mc;S.cut=5;await saveState();render();toast("Parâmetros padrão");};
+        if(window.__pf__ferraria){window.removeEventListener("focus",window.__pf__ferraria);}
+        window.__pf__ferraria=async()=>{const el=$("#fer-body");if(!el||!document.body.contains(el))return;if(root.querySelector("input:focus"))return;try{S=await loadState();await loadMat();await loadConc();}catch(e){}render();};
+        window.addEventListener("focus",window.__pf__ferraria);
+        render();
+      }
+
+      /* ============ MIDNIGHT · Engenharia ============ */
+      async function run_engenharia(root){
+        const folder=dv.current().file.folder;
+        const DATA_PATH=(folder?folder+"/":"")+"MIDNIGHT_Engenharia_Data.json";
+        const MAT_PATH=(folder?folder+"/":"")+"MIDNIGHT_Materiais_Data.json";
+        const adapter=app.vault.adapter;
+        const META={"resF": 0.45, "res": 22.3, "mc": 32.4};
+        const ITEMS=[{"n": "Song Gear Tier 1", "a": "Song Gear Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 5.46132, "Umbral Tin Ore Tier 1": 2.73066}, "k": 0.1174}, {"n": "Song Gear Tier 2", "a": "Song Gear Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 5.46132, "Umbral Tin Ore Tier 2": 2.73066}, "k": 0.1174}, {"n": "Soul Sprocket Tier 1", "a": "Soul Sprocket Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 2.73066, "Umbral Tin Ore Tier 1": 5.46132}, "k": 0.1174}, {"n": "Soul Sprocket Tier 2", "a": "Soul Sprocket Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 2.73066, "Umbral Tin Ore Tier 2": 5.46132}, "k": 0.1174}, {"n": "Laced Zoomshots Tier 1", "a": "Laced Zoomshots Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348}, {"n": "Laced Zoomshots Tier 2", "a": "Laced Zoomshots Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348}, {"n": "Weighted Boomshots Tier 1", "a": "Weighted Boomshots Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348}, {"n": "Weighted Boomshots Tier 2", "a": "Weighted Boomshots Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348}, {"n": "Smuggler's Lynxeye Tier 1", "a": "Smuggler's Lynxeye Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348}, {"n": "Smuggler's Lynxeye Tier 2", "a": "Smuggler's Lynxeye Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348}, {"n": "Farstrider's Hawkeye Tier 1", "a": "Farstrider's Hawkeye Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 1": 8.19198, "Umbral Tin Ore Tier 1": 8.19198}, "k": 0.2348}, {"n": "Farstrider's Hawkeye Tier 2", "a": "Farstrider's Hawkeye Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Refulgent Copper Ore Tier 2": 8.19198, "Umbral Tin Ore Tier 2": 8.19198}, "k": 0.2348}, {"n": "Consistent Cogwheel Tier 1", "a": "Consistent Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393}, {"n": "Consistent Cogwheel Tier 2", "a": "Consistent Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Light": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393}, {"n": "Flux Cogwheel Tier 1", "a": "Flux Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393}, {"n": "Flux Cogwheel Tier 2", "a": "Flux Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Primal Energy": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393}, {"n": "Greased Cogwheel Tier 1", "a": "Greased Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393}, {"n": "Greased Cogwheel Tier 2", "a": "Greased Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Wild Magic": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393}, {"n": "Perfected Cogwheel Tier 1", "a": "Perfected Cogwheel Tier 1", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 0.54613, "Refulgent Copper Ore Tier 1": 13.65329, "Umbral Tin Ore Tier 1": 10.92263}, "k": 0.9393}, {"n": "Perfected Cogwheel Tier 2", "a": "Perfected Cogwheel Tier 2", "m": "B", "y": 1, "mb": 0, "r": {"Mote of Pure Void": 0.54613, "Refulgent Copper Ore Tier 2": 13.65329, "Umbral Tin Ore Tier 2": 10.92263}, "k": 0.9393}, {"n": "Emergency Soul Link Tier 1", "a": "Emergency Soul Link Tier 1", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.0}, {"n": "Emergency Soul Link Tier 2", "a": "Emergency Soul Link Tier 2", "m": "B", "y": 1, "mb": 0, "r": {}, "k": 0.0}];
+        const HAS_A=ITEMS.some(i=>i.m==="A");
+
+        const $=s=>root.querySelector(s);
+        function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+        function nk(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase();}
+        function fmtK(n){n=Number(n)||0;const s=n<0?"−":"";const a=Math.abs(n);let v;if(a>=1e6)v=(a/1e6).toLocaleString('pt-BR',{maximumFractionDigits:2})+"M";else if(a>=1e3)v=(a/1e3).toLocaleString('pt-BR',{maximumFractionDigits:1})+"k";else v=a.toLocaleString('pt-BR',{maximumFractionDigits:1});return s+v;}
+        function fmtN(n){return (Number(n)||0).toLocaleString('pt-BR',{maximumFractionDigits:1});}
+        function parseNum(x){const s=String(x==null?"":x).trim().replace(",",".");if(!s)return NaN;return parseFloat(s.replace(/[^0-9.\-]/g,""));}
+
+        let MAT={};
+        async function loadMat(){MAT={};try{if(await adapter.exists(MAT_PATH)){const p=JSON.parse(await adapter.read(MAT_PATH));if(p&&p.prices)Object.keys(p.prices).forEach(k=>{MAT[k]=Number(p.prices[k].gold)||0;});}}catch(e){console.log("mat err",e);}}
+        function priceOf(nm){return MAT[nk(nm)]||0;}
+
+        /* ---- Concentração (store compartilhado entre todas as abas) ---- */
+        const CONC_PATH=(folder?folder+"/":"")+"MIDNIGHT_Concentracao_Data.json";
+        const PROFLABEL="Engenharia", CGROUP="Engenharia";
+        const CONC_DEF0={"Poção":20,"Phial":35,"Flask":50,"Gema":40,"Encantamento":40,"Inscrição":35,"Ferraria":70,"Engenharia":55};
+        let CONC={def:Object.assign({},CONC_DEF0),item:{}};
+        async function loadConc(){try{if(await adapter.exists(CONC_PATH)){const p=JSON.parse(await adapter.read(CONC_PATH));CONC={def:Object.assign({},CONC_DEF0,(p&&p.def)||{}),item:(p&&p.item&&typeof p.item==="object")?p.item:{}};}else{CONC={def:Object.assign({},CONC_DEF0),item:{}};}}catch(e){CONC={def:Object.assign({},CONC_DEF0),item:{}};}}
+        let _cSaving=false,_cPending=false;
+        async function saveConc(){if(_cSaving){_cPending=true;return;}_cSaving=true;try{await adapter.write(CONC_PATH,JSON.stringify(CONC));}catch(e){}_cSaving=false;if(_cPending){_cPending=false;saveConc();}}
+        function concKeyOf(name){return PROFLABEL+"|"+nk(name);}
+        function concOf(name){const k=concKeyOf(name);if(CONC.item[k]!=null)return Number(CONC.item[k])||0;return Number(CONC.def[CGROUP]||0)||0;}
+
+        function freshState(){return {res:META.res,mc:META.mc,cut:5,ah:{},sort:"profit"};}
+        async function loadState(){try{if(await adapter.exists(DATA_PATH)){const p=JSON.parse(await adapter.read(DATA_PATH));const s=freshState();if(typeof p.res==="number")s.res=p.res;if(typeof p.mc==="number")s.mc=p.mc;if(typeof p.cut==="number")s.cut=p.cut;if(p.ah&&typeof p.ah==="object")s.ah=p.ah;if(["profit","roi","cost","ah","name"].includes(p.sort))s.sort=p.sort;return s;}}catch(e){console.log("load err",e);}return freshState();}
+        let saving=false,pending=false;
+        async function saveState(){if(saving){pending=true;return;}saving=true;try{await adapter.write(DATA_PATH,JSON.stringify(S));}catch(e){}saving=false;if(pending){pending=false;saveState();}}
+        let S=await loadState();
+        await loadMat();
+        await loadConc();
+
+        function calc(it){
+          let miss=[],c=it.k;
+          for(const m in it.r){const p=priceOf(m);if(p<=0)miss.push(m);c+=it.r[m]*p;}
+          const cost=c*(1-(S.res/100)*META.resF);
+          const ahOv=S.ah[nk(it.n)],ahImp=priceOf(it.a),ah=(ahOv!=null)?ahOv:ahImp,fromImp=(ahOv==null&&ahImp>0);
+          const cut=1-S.cut/100; let value,profit;
+          if(it.m==="A"){const mult=1+(S.mc/100)*it.mb;value=ah*it.y*mult*cut;profit=value-cost;}
+          else{value=cut>0?cost/cut:0;profit=ah-value;}
+          const roi=cost>0?profit/cost*100:0;
+          const conc=concOf(it.n); const lconc=conc>0?profit/conc:null;
+          return {n:it.n,a:it.a,m:it.m,cost,ah,fromImp,value,profit,roi,conc,lconc,miss,nr:(Object.keys(it.r).length===0),noAh:(ah<=0),
+                  recipe:Object.keys(it.r).map(k=>(Math.round(it.r[k]*100)/100)+"× "+k).join(" + ")};
+        }
+        function rows(){return ITEMS.map(calc);}
+
+        root.innerHTML=`
+        <style>
+        .eng-wrap{--panel:#0f1420;--panel2:#111828;--border:#252d42;--border2:#1a2032;--gold:#c9a84c;--gold2:#e4c76a;--text:#d4ddf0;--muted:#8a94a8;--muted2:#5a6480;--green:#4ecb8e;--red:#e05a5a;--cyan:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);width:100%;max-width:100%;box-sizing:border-box}
+        .eng-wrap *{box-sizing:border-box}
+        .eng-wrap .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:18px;max-width:100%}
+        .eng-wrap h2.mt{font-family:Georgia,serif;font-size:13.5px;margin:0 0 12px;color:var(--gold);letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+        .eng-wrap .params{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+        .eng-wrap .param{display:flex;flex-direction:column;gap:3px}
+        .eng-wrap .param label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+        .eng-wrap .param input{width:88px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px}
+        .eng-wrap .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+        .eng-wrap .stat{background:var(--panel);border:1px solid var(--border2);border-radius:11px;padding:12px;text-align:center}
+        .eng-wrap .stat .n{font-family:Georgia,serif;font-size:18px;font-weight:bold;color:var(--gold);line-height:1.15}
+        .eng-wrap .stat .l{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+        .eng-wrap .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+        .eng-wrap .toolbar input{flex:1;min-width:150px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:13px}
+        .eng-wrap .tw{width:100%;overflow-x:auto}
+        .eng-wrap table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
+        .eng-wrap th{text-align:right;color:var(--muted2);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;padding:6px 5px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+        .eng-wrap th:first-child,.eng-wrap td:first-child{text-align:left}
+        .eng-wrap th.sorted{color:var(--gold)}
+        .eng-wrap td{padding:5px 5px;border-bottom:1px solid var(--border2);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .eng-wrap td.name{text-align:left;max-width:0;width:100%;overflow:hidden;text-overflow:ellipsis}
+        .eng-wrap .imp{font-size:9px;color:var(--cyan);margin-left:5px}
+        .eng-wrap input.cell{width:64px;background:var(--panel2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:4px 5px;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .eng-wrap input.cell:focus{outline:none;border-color:var(--gold)}
+        .eng-wrap input.cc{width:46px}
+        .eng-wrap input.cc.ov{border-color:var(--cyan)}
+        .eng-wrap .pos{color:var(--green)} .eng-wrap .neg{color:var(--red)}
+        .eng-wrap .pf{font-weight:700}
+        .eng-wrap .warn{color:var(--red);font-size:9px;margin-left:5px;cursor:help}
+        .eng-wrap .ftr{text-align:center;color:var(--muted2);font-size:11px;margin-top:10px}
+        .eng-wrap .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;z-index:9999}
+        .eng-wrap .toast.show{opacity:1}
+        .eng-wrap button{cursor:pointer;border:none;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#0b0f18;background:linear-gradient(180deg,var(--gold),#b8973a)}
+        .eng-wrap button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500}
+        @media (max-width:620px){.eng-wrap .stats{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="eng-wrap">
+          <div class="card" style="margin-bottom:18px">
+            <h2 class="mt"><span>⚙️ Parâmetros</span><button class="ghost" id="eng-refresh">↻ atualizar preços (Materiais)</button></h2>
+            <div class="params">
+              <div class="param"><label>Resourcefulness %</label><input type="number" id="eng-res" step="0.1"></div>
+              <div class="param" id="eng-mcwrap"><label>Multicraft %</label><input type="number" id="eng-mc" step="0.1"></div>
+              <div class="param"><label>Taxa de AH %</label><input type="number" id="eng-cut" step="0.5"></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--muted2)" id="eng-note"></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="eng-k1">—</div><div class="l">Maior lucro/item</div></div>
+            <div class="stat"><div class="n" id="eng-k2">—</div><div class="l">Maior ROI%</div></div>
+            <div class="stat"><div class="n" id="eng-k3">0</div><div class="l">Com preço AH</div></div>
+            <div class="stat"><div class="n" id="eng-k4">—</div><div class="l">Lucro/item médio</div></div>
+          </div>
+          <div class="card">
+            <h2 class="mt"><span>🧮 Crafts</span><button class="ghost" id="eng-reset">padrão</button></h2>
+            <div class="toolbar"><input type="text" id="eng-search" placeholder="🔎 Buscar craft…"></div>
+            <div class="tw"><table><thead><tr>
+              <th data-s="name">Craft</th><th data-s="cost">Custo</th><th>Breakeven</th><th data-s="ah">Preço AH</th><th data-s="profit">Lucro/item</th><th data-s="roi">ROI%</th><th>Conc</th><th data-s="lconc">Lucro/Conc</th>
+            </tr></thead><tbody id="eng-body"></tbody></table></div>
+          </div>
+          <div class="ftr">Preço AH ⟳ = do painel Materiais (editável) · ⚠ = falta preço de material · receitas/fórmulas da Kaychak · dados em <b>MIDNIGHT_Engenharia_Data.json</b></div>
+        </div>`;
+
+        let toastT=null;
+        function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";root.querySelector(".eng-wrap").appendChild(t);}t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2000);}
+
+        let searchTerm="";
+        const SORTMAP={profit:"profit",roi:"roi",cost:"cost",ah:"ah",name:"n",lconc:"lconc"};
+        function render(){
+          if($("#eng-res")&&document.activeElement!==$("#eng-res"))$("#eng-res").value=S.res;
+          if($("#eng-mc")&&document.activeElement!==$("#eng-mc"))$("#eng-mc").value=S.mc;
+          if($("#eng-cut")&&document.activeElement!==$("#eng-cut"))$("#eng-cut").value=S.cut;
+          if($("#eng-mcwrap"))$("#eng-mcwrap").style.display=HAS_A?"":"none";
+          $("#eng-note").innerHTML = HAS_A
+            ? "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Valor/craft = AH × rendimento × (1 + mc%×base) × (1 − taxa)."
+            : "Custo = (Σ mats × preço) × (1 − res%×"+META.resF+") · Lucro = preço AH − custo/(1 − taxa). (multicraft não entra no valor desta profissão)";
+          let rs=rows(); const all=rs.slice();
+          if(searchTerm){const t=nk(searchTerm);rs=rs.filter(r=>nk(r.n).includes(t));}
+          const sk=SORTMAP[S.sort]||"profit";
+          if(sk==="lconc")rs=rs.filter(r=>r.lconc!=null && !r.noAh && !r.nr);
+          rs.sort((a,b)=>{if(sk==="n")return String(a.n).localeCompare(String(b.n));return (b[sk]||0)-(a[sk]||0);});
+          const withAh=all.filter(r=>!r.noAh && !r.nr);
+          const bp=withAh.slice().sort((a,b)=>b.profit-a.profit)[0], br=withAh.slice().sort((a,b)=>b.roi-a.roi)[0];
+          const avg=withAh.length?withAh.reduce((a,r)=>a+r.profit,0)/withAh.length:0;
+          $("#eng-k1").innerHTML=bp?('<span style="font-size:12px">'+esc(bp.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtK(bp.profit)):"—";
+          $("#eng-k2").innerHTML=br?('<span style="font-size:12px">'+esc(br.n.replace(/ Tier [12]$/,""))+'</span><br>'+fmtN(br.roi)+"%"):"—";
+          $("#eng-k3").textContent=withAh.length+"/"+all.length;
+          $("#eng-k4").textContent=withAh.length?fmtK(avg):"—";
+          root.querySelectorAll("th[data-s]").forEach(th=>th.classList.toggle("sorted",th.dataset.s===S.sort));
+          const body=$("#eng-body");
+          body.innerHTML=rs.map(r=>{const key=nk(r.n);
+            const warn=r.nr?'<span class="warn" title="Receita não detectada no .xlsx — custo pode estar incompleto">⚠</span>':(r.miss.length?'<span class="warn" title="Sem preço: '+esc(r.miss.join(", "))+'">⚠</span>':'');
+            return '<tr data-k="'+key+'">'+
+              '<td class="name" title="'+esc(r.recipe)+'">'+esc(r.n.replace(/ Tier ([12])$/," T$1"))+warn+'</td>'+
+              '<td>'+fmtK(r.cost)+'</td>'+
+              '<td>'+(r.noAh&&r.m==="A"?'<span style="color:var(--muted2)">—</span>':fmtK(r.value))+'</td>'+
+              '<td><input class="cell" data-ah="'+key+'" value="'+(r.ah>0?fmtN(r.ah):"")+'" placeholder="—">'+(r.fromImp?'<span class="imp">⟳</span>':'')+'</td>'+
+              '<td class="pf '+(r.profit>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtK(r.profit))+'</td>'+
+              '<td class="'+(r.roi>=0?"pos":"neg")+'">'+(r.noAh?'<span style="color:var(--muted2)">—</span>':fmtN(r.roi)+"%")+'</td>'+
+              '<td><input class="cell cc'+(CONC.item[concKeyOf(r.n)]!=null?" ov":"")+'" data-cc="'+esc(concKeyOf(r.n))+'" value="'+(r.conc>0?r.conc:"")+'" placeholder="'+(CONC.def[CGROUP]||"—")+'" title="Concentração deste craft (vazio = padrão do tipo '+esc(CGROUP)+')"></td>'+
+              '<td class="pf '+((r.lconc==null)?"":(r.lconc>=0?"pos":"neg"))+'">'+(r.noAh||r.lconc==null?'<span style="color:var(--muted2)">—</span>':fmtK(r.lconc))+'</td></tr>';
+          }).join("");
+          body.querySelectorAll("input[data-ah]").forEach(inp=>inp.onchange=async()=>{const key=inp.dataset.ah,vv=parseNum(inp.value),imp=MAT[key]||0;if(isNaN(vv)){delete S.ah[key];}else if(imp>0&&Math.abs(vv-imp)<0.05){delete S.ah[key];}else{S.ah[key]=vv;}await saveState();render();});
+          body.querySelectorAll("input[data-cc]").forEach(inp=>inp.onchange=async()=>{const k=inp.dataset.cc,vv=parseNum(inp.value);if(isNaN(vv)||inp.value.trim()===""){delete CONC.item[k];}else{CONC.item[k]=vv;}await saveConc();render();});
+        }
+
+        async function setP(f,v){if(isNaN(v))return;S[f]=v;await saveState();render();}
+        $("#eng-res").onchange=e=>setP("res",parseNum(e.target.value));
+        $("#eng-mc").onchange=e=>setP("mc",parseNum(e.target.value));
+        $("#eng-cut").onchange=e=>setP("cut",parseNum(e.target.value));
+        root.querySelectorAll("th[data-s]").forEach(th=>th.onclick=async()=>{S.sort=th.dataset.s;await saveState();render();});
+        $("#eng-search").oninput=e=>{searchTerm=e.target.value;render();};
+        $("#eng-refresh").onclick=async()=>{await loadMat();render();toast("Preços atualizados");};
+        $("#eng-reset").onclick=async()=>{S.res=META.res;S.mc=META.mc;S.cut=5;await saveState();render();toast("Parâmetros padrão");};
+        if(window.__pf__engenharia){window.removeEventListener("focus",window.__pf__engenharia);}
+        window.__pf__engenharia=async()=>{const el=$("#eng-body");if(!el||!document.body.contains(el))return;if(root.querySelector("input:focus"))return;try{S=await loadState();await loadMat();await loadConc();}catch(e){}render();};
+        window.addEventListener("focus",window.__pf__engenharia);
+        render();
       }
 
       const RUN={melhores:run_melhores,materiais:run_materiais,alquimia:run_alquimia,joalheria:run_joalheria,encantamento:run_encantamento,inscricao:run_inscricao,ferraria:run_ferraria,engenharia:run_engenharia};
